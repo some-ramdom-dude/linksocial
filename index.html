@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkSocial | Minimal</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <style>
+        :root { --bg: #ffffff; --text: #111; --gray: #f8f8f8; --accent: #000; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; line-height: 1.5; }
+        .container { width: 100%; max-width: 450px; padding: 60px 20px; }
+        
+        /* Header & Nav */
+        nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+        h2 { font-weight: 800; letter-spacing: -1px; margin: 0; }
+        .btn-link { background: none; border: none; color: #888; cursor: pointer; font-size: 14px; }
+
+        /* Auth and Forms */
+        .box { background: var(--gray); padding: 25px; border-radius: 20px; margin-bottom: 30px; border: 1px solid #eee; }
+        input, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 14px; }
+        .primary-btn { background: var(--accent); color: #fff; border: none; padding: 12px; border-radius: 12px; cursor: pointer; width: 100%; font-weight: 600; margin-top: 10px; }
+
+        /* Feed */
+        .feed-item { display: flex; align-items: center; gap: 16px; text-decoration: none; color: inherit; padding: 18px 0; border-bottom: 1px solid #f0f0f0; transition: 0.2s; }
+        .feed-item:hover { opacity: 0.6; }
+        .site-icon { width: 48px; height: 48px; border-radius: 12px; background: #eee; object-fit: cover; flex-shrink: 0; }
+        .site-info h3 { margin: 0; font-size: 16px; font-weight: 600; }
+        .site-info p { margin: 2px 0 0; font-size: 13px; color: #666; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <nav>
+        <h2>LinkSocial</h2>
+        <button id="logout-btn" class="btn-link" style="display:none;" onclick="logout()">Logout</button>
+    </nav>
+
+    <div id="auth-ui" class="box">
+        <p style="margin:0 0 15px 0; font-weight: 500;">Join the community</p>
+        <input type="email" id="email" placeholder="Enter your email">
+        <button class="primary-btn" onclick="login()">Get Magic Login Link</button>
+        <p style="font-size: 12px; color: #888; margin-top: 10px;">Check your inbox after clicking.</p>
+    </div>
+
+    <div id="post-ui" class="box" style="display:none;">
+        <p style="margin:0 0 15px 0; font-weight: 500;">Share a new link</p>
+        <input type="text" id="post-url" placeholder="https://website.com">
+        <input type="text" id="post-title" placeholder="Website Name">
+        <textarea id="post-desc" placeholder="What is this?" rows="2"></textarea>
+        <button class="primary-btn" onclick="publish()">Post to Feed</button>
+    </div>
+
+    <div id="feed-list">Loading community links...</div>
+</div>
+
+<script>
+    // --- CONNECTION SETTINGS ---
+    const SB_URL = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJyc2ltcWFiZ2Nxc3JkanhscXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwOTExOTksImV4cCI6MjA4ODY2NzE5OX0.26MOlBfwgwfzFYvV2C6jF90vYyJpWLF5GthoOlBSTJY';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJyc2ltcWFiZ2Nxc3JkanhscXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwOTExOTksImV4cCI6MjA4ODY2NzE5OX0.26MOlBfwgwfzFYvV2C6jF90vYyJpWLF5GthoOlBSTJY';
+    const client = supabase.createClient(SB_URL, SB_KEY);
+
+    // 1. Check if user is logged in
+    async function init() {
+        const { data: { user } } = await client.auth.getUser();
+        if (user) {
+            document.getElementById('auth-ui').style.display = 'none';
+            document.getElementById('post-ui').style.display = 'block';
+            document.getElementById('logout-btn').style.display = 'block';
+        }
+        fetchFeed();
+    }
+
+    // 2. Login Logic
+    async function login() {
+        const email = document.getElementById('email').value;
+        const { error } = await client.auth.signInWithOtp({ email });
+        if (error) alert(error.message);
+        else alert("Login link sent! Check your email.");
+    }
+
+    async function logout() {
+        await client.auth.signOut();
+        location.reload();
+    }
+
+    // 3. Post Logic
+    async function publish() {
+        const { data: { user } } = await client.auth.getUser();
+        const url = document.getElementById('post-url').value;
+        const title = document.getElementById('post-title').value;
+        const desc = document.getElementById('post-desc').value;
+        
+        // This magic line gets the logo for you
+        const icon = `https://api.microlink.io/?url=${url}&embed=logo.url`;
+
+        const { error } = await client.from('posts').insert([
+            { url, title, description: desc, icon_url: icon, user_id: user.id }
+        ]);
+
+        if (error) alert("Error: " + error.message);
+        else location.reload();
+    }
+
+    // 4. Feed Display Logic
+    async function fetchFeed() {
+        const { data: posts, error } = await client.from('posts').select('*').order('created_at', { ascending: false });
+        const list = document.getElementById('feed-list');
+        
+        if (posts && posts.length > 0) {
+            list.innerHTML = posts.map(item => `
+                <a href="${item.url}" target="_blank" class="feed-item">
+                    <img src="${item.icon_url}" class="site-icon" onerror="this.src='https://via.placeholder.com/50'">
+                    <div class="site-info">
+                        <h3>${item.title}</h3>
+                        <p>${item.description}</p>
+                    </div>
+                </a>
+            `).join('');
+        } else {
+            list.innerHTML = "<p style='color:#888'>No posts yet. Be the first!</p>";
+        }
+    }
+
+    init();
+</script>
+
+</body>
+</html>
