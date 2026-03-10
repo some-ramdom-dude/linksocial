@@ -9,19 +9,26 @@
     <style>
         :root { --accent: #000; --border: #eee; --gray: #888; }
         body { font-family: 'Inter', sans-serif; background: #fff; color: #000; margin: 0; padding: 100px 20px; display: flex; flex-direction: column; align-items: center; }
+        
         .nav-header { position: fixed; top: 30px; right: 40px; display: flex; align-items: center; gap: 20px; z-index: 1000; }
         .logo { font-family: 'Montserrat', sans-serif; font-size: 1.2rem; text-transform: lowercase; text-decoration: none; color: #000; }
         .btn-post { background: #000; color: #fff; border: none; padding: 10px 20px; font-size: 0.7rem; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; border-radius: 50px; }
-        .container { width: 100%; max-width: 500px; }
+        
+        .container { width: 100%; max-width: 500px; position: relative; z-index: 1; }
         .hidden { display: none !important; }
-        .modal { position: fixed; inset: 0; background: rgba(255,255,255,0.95); display: flex; align-items: center; justify-content: center; z-index: 2000; opacity: 0; pointer-events: none; transition: 0.3s; }
-        .modal.active { opacity: 1; pointer-events: auto; }
-        .input-flat { width: 100%; padding: 12px 0; border: none; border-bottom: 1px solid #eee; margin-bottom: 15px; font-family: inherit; font-size: 1rem; }
-        .post { padding: 30px 0; border-bottom: 1px solid #f5f5f5; }
-        .post-title { font-weight: 600; font-size: 1.1rem; display: block; margin-bottom: 5px; }
+        
+        /* Fixed Modal Logic */
+        .modal { position: fixed; inset: 0; background: rgba(255,255,255,0.98); display: none; align-items: center; justify-content: center; z-index: 9999; }
+        .modal.active { display: flex; }
+        
+        .input-flat { width: 100%; padding: 12px 0; border: none; border-bottom: 1px solid #eee; margin-bottom: 15px; font-family: inherit; font-size: 1rem; outline: none; }
+        .input-flat:focus { border-bottom: 1px solid #000; }
+        
+        .post { padding: 30px 0; border-bottom: 1px solid #f5f5f5; transition: 0.3s; }
         .post-meta { font-size: 0.65rem; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
-        .avatar { width: 30px; height: 30px; border-radius: 50%; background: #eee; object-fit: cover; }
-        #undo-toast { position: fixed; bottom: 30px; background: #000; color: #fff; padding: 12px 24px; border-radius: 4px; font-size: 0.8rem; z-index: 3000; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .avatar { width: 30px; height: 30px; border-radius: 50%; background: #000; object-fit: cover; }
+        
+        #undo-toast { position: fixed; bottom: 30px; background: #000; color: #fff; padding: 12px 24px; border-radius: 4px; font-size: 0.8rem; z-index: 10000; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
     </style>
 </head>
 <body>
@@ -33,10 +40,10 @@
 
 <div id="onboarding-ui" class="container hidden">
     <h2 style="text-transform:uppercase; font-size:0.8rem; letter-spacing:2px; margin-bottom: 20px;">Complete Your Profile</h2>
-    <input type="text" id="set-handle" class="input-flat" placeholder="HANDLE (e.g. tech_guru)">
+    <input type="text" id="set-handle" class="input-flat" placeholder="HANDLE (Required)">
     <input type="text" id="set-display-name" class="input-flat" placeholder="DISPLAY NAME (Optional)">
     <input type="text" id="set-pfp" class="input-flat" placeholder="PFP IMAGE URL (Optional)">
-    <button onclick="saveProfile()" style="width:100%; padding:15px; background:#000; color:#fff; border:none; cursor:pointer; font-weight: 700;">START BROWSING</button>
+    <button onclick="saveProfile()" style="width:100%; padding:15px; background:#000; color:#fff; border:none; cursor:pointer; font-weight: 700;">SAVE & START</button>
 </div>
 
 <div id="login-ui" class="container">
@@ -83,47 +90,51 @@
                 fetchPosts();
             }
         } else {
-            fetchPosts(); // Allow public to see posts
+            fetchPosts();
         }
     }
     checkStatus();
+
+    async function login() {
+        const email = document.getElementById('email-input').value;
+        if(!email) return alert("Enter email");
+        await client.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.href } });
+        alert("Check your email for the login link!");
+    }
 
     async function saveProfile() {
         const username = document.getElementById('set-handle').value;
         const display_name = document.getElementById('set-display-name').value;
         const avatar_url = document.getElementById('set-pfp').value;
-        if (!username) return alert("Handle is required!");
+        if (!username) return alert("Handle required!");
 
         const { data: { user } } = await client.auth.getUser();
-        const { error } = await client.from('profiles').upsert({ id: user.id, username, display_name, avatar_url });
-        if (error) alert("Handle already taken or invalid!");
-        else location.reload();
+        await client.from('profiles').upsert({ id: user.id, username, display_name, avatar_url });
+        location.reload();
     }
 
     async function fetchPosts() {
-        // Fix: Use a left join so posts show even if profiles are missing
-        const { data, error } = await client.from('posts').select('*, profiles(*)').order('created_at', { ascending: false });
+        const { data } = await client.from('posts').select('*, profiles(*)').order('created_at', { ascending: false });
         const feed = document.getElementById('feed');
         
         if (!data || data.length === 0) {
-            feed.innerHTML = "<p style='color:#999; text-align:center;'>No posts found.</p>";
+            feed.innerHTML = "<p style='color:#999; text-align:center; margin-top:50px;'>The feed is empty.</p>";
             return;
         }
 
         feed.innerHTML = data.map(p => `
             <div class="post">
-                <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-                    <img src="${p.profiles?.avatar_url || 'https://api.dicebear.com/7.x/initials/svg?seed=' + (p.profiles?.username || 'anon')}" class="avatar">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+                    <img src="${p.profiles?.avatar_url || 'https://api.dicebear.com/7.x/initials/svg?seed=' + (p.profiles?.username || 'user')}" class="avatar">
                     <div class="post-meta">
-                        ${p.profiles?.display_name || p.profiles?.username || 'Anonymous'} 
-                        ${p.profiles?.username ? `(@${p.profiles.username})` : ''}
+                        ${p.profiles?.display_name || p.profiles?.username || 'Anonymous'}
+                        <span style="color:#ccc; font-weight:300; margin-left:5px;">@${p.profiles?.username || 'anon'}</span>
                     </div>
-                    <span onclick="report('${p.id}')" style="margin-left:auto; cursor:pointer; font-size:0.6rem; color:#ccc;">🚩 REPORT</span>
+                    <span onclick="report('${p.id}')" style="margin-left:auto; cursor:pointer; font-size:0.6rem; color:#eee;">🚩</span>
                 </div>
-                <span class="post-title">🔗 ${p.title}</span>
-                <p style="font-size:0.75rem; color:#888; margin-bottom:10px; font-family:monospace;">${p.url}</p>
-                <p class="post-desc">${p.desc || ''}</p>
-                <a href="${p.url}" target="_blank" style="color:#000; font-size:0.7rem; font-weight:700; text-decoration:none; border-bottom: 1px solid #000;">View Site →</a>
+                <strong class="post-title">🔗 ${p.title}</strong>
+                <p style="font-size:0.9rem; color:#444; line-height:1.5;">${p.desc || ''}</p>
+                <a href="${p.url}" target="_blank" style="color:#000; font-size:0.7rem; font-weight:700; text-decoration:none; border-bottom:1px solid #000;">OPEN SITE →</a>
             </div>
         `).join('');
     }
@@ -132,7 +143,7 @@
         const title = document.getElementById('post-title').value;
         const url = document.getElementById('post-url').value;
         const desc = document.getElementById('post-desc').value;
-        if (!title || !url) return alert("Title/URL required");
+        if (!title || !url) return alert("Fill in title/url");
 
         pendingData = { title, url, desc };
         toggleModal('post-modal', false);
@@ -140,28 +151,21 @@
 
         undoTimer = setTimeout(async () => {
             const { data: { user } } = await client.auth.getUser();
-            if (!user) return alert("Please login to post!");
             await client.from('posts').insert([{ ...pendingData, user_id: user.id }]);
-            document.getElementById('undo-toast').classList.add('hidden');
             location.reload();
         }, 5000);
     }
 
-    async function report(targetId) {
-        const reason = prompt("Why are you reporting this?");
-        if (!reason) return;
+    async function report(id) {
+        const reason = prompt("Report reason:");
+        if(!reason) return;
         const { data: { user } } = await client.auth.getUser();
-        await client.from('reports').insert([{ reporter_id: user?.id, target_id: targetId, reason }]);
-        alert("Reported. Our AI will review this shortly.");
+        await client.from('reports').insert([{ reporter_id: user?.id, target_id: id, reason }]);
+        alert("Reported.");
     }
 
     function cancelPublish() { clearTimeout(undoTimer); document.getElementById('undo-toast').classList.add('hidden'); toggleModal('post-modal', true); }
     function toggleModal(id, show) { document.getElementById(id).classList.toggle('active', show); }
-    async function login() {
-        const email = document.getElementById('email-input').value;
-        await client.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.href } });
-        alert("Check your email!");
-    }
 </script>
 </body>
 </html>
