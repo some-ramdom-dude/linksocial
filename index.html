@@ -10,17 +10,18 @@
         body { font-family: 'Inter', sans-serif; background: #fff; color: #000; margin: 0; padding: 100px 20px; display: flex; flex-direction: column; align-items: center; }
         .logo { position: fixed; top: 30px; right: 40px; font-family: 'Montserrat', sans-serif; font-size: 1.2rem; text-transform: lowercase; color: #000; }
         .container { width: 100%; max-width: 400px; }
-        h2 { font-weight: 400; font-size: 0.9rem; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; color: #666; }
-        input, textarea { width: 100%; margin-bottom: 15px; padding: 12px 0; background: transparent; border: none; border-bottom: 1px solid #eee; color: #000; font-family: inherit; box-sizing: border-box; }
+        h2 { font-weight: 400; font-size: 0.8rem; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; color: #999; }
+        input, textarea { width: 100%; margin-bottom: 20px; padding: 10px 0; background: transparent; border: none; border-bottom: 1px solid #eee; color: #000; font-family: inherit; box-sizing: border-box; }
         input:focus { outline: none; border-bottom: 1px solid #000; }
-        button { width: 100%; padding: 15px; background: #000; border: none; color: #fff; cursor: pointer; font-family: inherit; font-size: 0.9rem; }
-        button:disabled { background: #ccc; }
+        button { width: 100%; padding: 16px; background: #000; border: none; color: #fff; cursor: pointer; font-family: inherit; font-size: 0.75rem; letter-spacing: 1px; text-transform: uppercase; transition: 0.2s; }
+        button:hover { background: #333; }
+        button:disabled { background: #f0f0f0; color: #ccc; cursor: not-allowed; }
         .hidden { display: none; }
-        #feed { margin-top: 60px; width: 100%; max-width: 400px; }
-        .post { padding: 20px 0; border-bottom: 1px solid #f0f0f0; }
-        .post-title { font-weight: 600; font-size: 1rem; }
-        .post-desc { font-size: 0.85rem; color: #666; margin: 5px 0; }
-        .post-link { font-size: 0.75rem; text-decoration: underline; color: #000; font-weight: 600; }
+        #feed { margin-top: 80px; width: 100%; max-width: 400px; }
+        .post { padding: 30px 0; border-bottom: 1px solid #f9f9f9; }
+        .post-title { font-weight: 600; font-size: 1rem; color: #000; }
+        .post-desc { font-size: 0.85rem; color: #777; margin: 10px 0; line-height: 1.5; }
+        .post-link { font-size: 0.7rem; text-decoration: none; color: #000; font-weight: 800; text-transform: uppercase; border-bottom: 2px solid #000; padding-bottom: 2px; }
     </style>
 </head>
 <body>
@@ -30,24 +31,25 @@
 <div class="container">
     <div id="login-ui">
         <h2>Identify</h2>
-        <input type="email" id="email-input" placeholder="email address">
-        <button id="login-btn" onclick="login()">Get Link</button>
+        <input type="email" id="email-input" placeholder="EMAIL">
+        <button id="login-btn" onclick="login()">Get Access</button>
     </div>
 
     <div id="post-ui" class="hidden">
         <h2>New Entry</h2>
-        <input type="text" id="post-title" placeholder="title">
-        <input type="text" id="post-url" placeholder="url">
-        <textarea id="post-desc" rows="2" placeholder="description"></textarea>
+        <input type="text" id="post-title" placeholder="TITLE">
+        <input type="text" id="post-url" placeholder="URL">
+        <textarea id="post-desc" rows="2" placeholder="DESCRIPTION"></textarea>
         <button id="publish-btn" onclick="publish()">Submit</button>
-        <p style="text-align:center; font-size:0.7rem; color:#ccc; cursor:pointer;" onclick="logout()">Logout</p>
+        <p style="text-align:center; font-size:0.65rem; color:#bbb; cursor:pointer; margin-top: 30px; letter-spacing: 1px;" onclick="logout()">LOGOUT</p>
     </div>
 </div>
 
 <div id="feed"></div>
 
 <script>
-    const SB_URL = 'https://brsimqabgcqsrjdxlqyw.supabase.co';
+    // UPDATED WITH YOUR CORRECTED URL
+    const SB_URL = 'https://brsimqabgcqsrdjxlqyw.supabase.co';
     const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJyc2ltcWFiZ2Nxc3JkanhscXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwOTExOTksImV4cCI6MjA4ODY2NzE5OX0.26MOlBfwgwfzFYvV2C6jF90vYyJpWLF5GthoOlBSTJY'; 
     const client = supabase.createClient(SB_URL, SB_KEY);
 
@@ -59,38 +61,53 @@
                 document.getElementById('post-ui').classList.remove('hidden');
                 fetchPosts();
             }
-        } catch (e) { console.error("Database offline."); }
+        } catch (e) { console.log("Connection check failed."); }
     }
     checkStatus();
 
     async function login() {
         const btn = document.getElementById('login-btn');
-        btn.innerText = "Connecting...";
+        btn.innerText = "AUTHENTICATING...";
+        btn.disabled = true;
+        
         try {
             const email = document.getElementById('email-input').value;
             const { error } = await client.auth.signInWithOtp({
                 email: email,
                 options: { emailRedirectTo: 'https://some-ramdom-dude.github.io/linksocial/' }
             });
-            if (error) alert("Error: " + error.message);
-            else alert("Check your email!");
+            if (error) throw error;
+            alert("Magic Link dispatched. Check your inbox.");
         } catch (err) {
-            alert("Network Error: Is your Supabase project paused?");
-        } finally { btn.innerText = "Get Link"; }
+            alert("Error: " + err.message);
+        } finally {
+            btn.innerText = "Get Access";
+            btn.disabled = false;
+        }
     }
 
     async function publish() {
-        const { data: { user } } = await client.auth.getUser();
-        const urlV = document.getElementById('post-url').value;
-        const titleV = document.getElementById('post-title').value;
-        const descV = document.getElementById('post-desc').value;
-        
-        const { error } = await client.from('posts').insert([{ 
-            url: urlV, title: titleV, desc: descV, user_id: user.id 
-        }]);
+        const btn = document.getElementById('publish-btn');
+        btn.innerText = "SENDING...";
+        btn.disabled = true;
 
-        if (error) alert(error.message);
-        else location.reload();
+        try {
+            const { data: { user } } = await client.auth.getUser();
+            const urlV = document.getElementById('post-url').value;
+            const titleV = document.getElementById('post-title').value;
+            const descV = document.getElementById('post-desc').value;
+            
+            const { error } = await client.from('posts').insert([{ 
+                url: urlV, title: titleV, desc: descV, user_id: user.id 
+            }]);
+
+            if (error) throw error;
+            location.reload();
+        } catch (err) {
+            alert(err.message);
+            btn.innerText = "Submit";
+            btn.disabled = false;
+        }
     }
 
     async function fetchPosts() {
@@ -100,7 +117,7 @@
                 <div class="post">
                     <span class="post-title">${p.title}</span>
                     <p class="post-desc">${p.desc}</p>
-                    <a href="${p.url}" target="_blank" class="post-link">VIEW</a>
+                    <a href="${p.url}" target="_blank" class="post-link">View Site</a>
                 </div>
             `).join('');
         }
