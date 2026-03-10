@@ -9,160 +9,158 @@
     <style>
         :root { --accent: #000; --border: #eee; --gray: #888; }
         body { font-family: 'Inter', sans-serif; background: #fff; color: #000; margin: 0; padding: 100px 20px; display: flex; flex-direction: column; align-items: center; }
-
         .nav-header { position: fixed; top: 30px; right: 40px; display: flex; align-items: center; gap: 20px; z-index: 1000; }
         .logo { font-family: 'Montserrat', sans-serif; font-size: 1.2rem; text-transform: lowercase; text-decoration: none; color: #000; }
-        
-        .btn-post { 
-            background: #000; color: #fff; border: none; padding: 10px 20px; font-size: 0.7rem; 
-            letter-spacing: 1px; text-transform: uppercase; cursor: pointer; border-radius: 50px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .controls { width: 100%; max-width: 500px; margin-bottom: 40px; display: flex; gap: 10px; }
-        .search-bar { flex: 1; border: none; border-bottom: 1px solid var(--border); padding: 10px; font-family: inherit; }
-        .search-bar:focus { outline: none; border-bottom: 1px solid #000; }
-
+        .btn-post { background: #000; color: #fff; border: none; padding: 10px 20px; font-size: 0.7rem; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; border-radius: 50px; }
         .container { width: 100%; max-width: 500px; }
         .hidden { display: none !important; }
-        
         .modal { position: fixed; inset: 0; background: rgba(255,255,255,0.95); display: flex; align-items: center; justify-content: center; z-index: 2000; opacity: 0; pointer-events: none; transition: 0.3s; }
         .modal.active { opacity: 1; pointer-events: auto; }
-        .modal-content { width: 90%; max-width: 400px; }
-
-        .post { padding: 30px 0; border-bottom: 1px solid #f5f5f5; position: relative; animation: fadeIn 0.5s ease forwards; }
-        .post-title { font-weight: 600; font-size: 1.1rem; margin-bottom: 5px; display: block; }
-        .post-meta { font-size: 0.65rem; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; font-weight: 700; }
-        .post-desc { font-size: 0.9rem; line-height: 1.6; color: #444; margin-bottom: 15px; }
-        
-        .mod-tools { margin-top: 10px; display: flex; gap: 15px; }
-        .btn-del { color: #ff4444; font-size: 0.65rem; border: none; background: none; cursor: pointer; text-transform: uppercase; padding: 0; font-weight: 700; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .input-flat { width: 100%; padding: 12px 0; border: none; border-bottom: 1px solid #eee; margin-bottom: 15px; font-family: inherit; font-size: 1rem; }
+        .post { padding: 30px 0; border-bottom: 1px solid #f5f5f5; }
+        .post-title { font-weight: 600; font-size: 1.1rem; display: block; margin-bottom: 5px; }
+        .post-meta { font-size: 0.65rem; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+        .avatar { width: 30px; height: 30px; border-radius: 50%; background: #eee; object-fit: cover; }
+        #undo-toast { position: fixed; bottom: 30px; background: #000; color: #fff; padding: 12px 24px; border-radius: 4px; font-size: 0.8rem; z-index: 3000; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
 
 <div class="nav-header">
     <a href="#" class="logo">LinkSocial</a>
-    <button class="btn-post" id="open-post-btn" onclick="toggleModal(true)">+ Post</button>
+    <button class="btn-post" onclick="toggleModal('post-modal', true)">+ Post</button>
 </div>
 
-<div class="controls">
-    <input type="text" id="search-input" class="search-bar" placeholder="Search entries..." oninput="fetchPosts()">
+<div id="onboarding-ui" class="container hidden">
+    <h2 style="text-transform:uppercase; font-size:0.8rem; letter-spacing:2px; margin-bottom: 20px;">Complete Your Profile</h2>
+    <input type="text" id="set-handle" class="input-flat" placeholder="HANDLE (e.g. tech_guru)">
+    <input type="text" id="set-display-name" class="input-flat" placeholder="DISPLAY NAME (Optional)">
+    <input type="text" id="set-pfp" class="input-flat" placeholder="PFP IMAGE URL (Optional)">
+    <button onclick="saveProfile()" style="width:100%; padding:15px; background:#000; color:#fff; border:none; cursor:pointer; font-weight: 700;">START BROWSING</button>
 </div>
 
 <div id="login-ui" class="container">
     <h2 style="font-size: 0.8rem; letter-spacing: 2px; color: #999; text-transform: uppercase;">Identity Required</h2>
-    <input type="email" id="email-input" style="width:100%; padding:15px 0; border:none; border-bottom:1px solid #eee; margin-bottom:20px;" placeholder="EMAIL">
-    <button id="login-btn" onclick="login()" style="width:100%; padding:15px; background:#000; color:#fff; border:none; cursor:pointer;">GET ACCESS</button>
-</div>
-
-<div id="post-modal" class="modal">
-    <div class="modal-content">
-        <h2 style="text-transform:uppercase; font-size:0.8rem; letter-spacing:2px;">New Entry</h2>
-        <input type="text" id="post-title" style="width:100%; padding:10px 0; border:none; border-bottom:1px solid #eee; margin-bottom:15px;" placeholder="TITLE">
-        <input type="text" id="post-url" style="width:100%; padding:10px 0; border:none; border-bottom:1px solid #eee; margin-bottom:15px;" placeholder="URL">
-        <textarea id="post-desc" rows="3" style="width:100%; padding:10px 0; border:none; border-bottom:1px solid #eee; margin-bottom:20px;" placeholder="DESCRIPTION"></textarea>
-        <button id="pub-btn" onclick="publish()" style="width:100%; padding:15px; background:#000; color:#fff; border:none; cursor:pointer;">PUBLISH</button>
-        <p onclick="toggleModal(false)" style="text-align:center; font-size:0.7rem; margin-top:20px; cursor:pointer; color:#999;">CANCEL</p>
-    </div>
+    <input type="email" id="email-input" class="input-flat" placeholder="EMAIL">
+    <button onclick="login()" style="width:100%; padding:15px; background:#000; color:#fff; border:none; cursor:pointer; font-weight: 700;">GET ACCESS</button>
 </div>
 
 <div id="feed" class="container"></div>
+
+<div id="post-modal" class="modal">
+    <div class="modal-content" style="width: 90%; max-width: 400px;">
+        <h2 style="text-transform:uppercase; font-size:0.8rem; letter-spacing:2px;">New Entry</h2>
+        <input type="text" id="post-title" class="input-flat" placeholder="TITLE">
+        <input type="text" id="post-url" class="input-flat" placeholder="URL">
+        <textarea id="post-desc" class="input-flat" rows="3" placeholder="DESCRIPTION"></textarea>
+        <button id="pub-btn" onclick="publish()" style="width:100%; padding:15px; background:#000; color:#fff; border:none; cursor:pointer; font-weight: 700;">PUBLISH</button>
+        <p onclick="toggleModal('post-modal', false)" style="text-align:center; font-size:0.7rem; margin-top:20px; cursor:pointer; color:#999;">CANCEL</p>
+    </div>
+</div>
+
+<div id="undo-toast" class="hidden">
+    Post sent... <span onclick="cancelPublish()" style="color:#00ff00; cursor:pointer; font-weight:700; margin-left: 15px;">Undo</span>
+</div>
 
 <script>
     const SB_URL = 'https://brsimqabgcqsrdjxlqyw.supabase.co';
     const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJyc2ltcWFiZ2Nxc3JkanhscXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwOTExOTksImV4cCI6MjA4ODY2NzE5OX0.26MOlBfwgwfzFYvV2C6jF90vYyJpWLF5GthoOlBSTJY'; 
     const client = supabase.createClient(SB_URL, SB_KEY);
-    const ADMIN_ID = 'b1dd5dce-4388-492e-bc79-d8a3b25ec302'; 
-
+    
     let undoTimer = null;
+    let pendingData = null;
 
     async function checkStatus() {
         const { data: { user } } = await client.auth.getUser();
         if (user) {
             document.getElementById('login-ui').classList.add('hidden');
-            // Link email to a profile username
-            await client.from('profiles').upsert({ id: user.id, username: user.email.split('@')[0] });
-            fetchPosts();
+            const { data: profile } = await client.from('profiles').select('*').eq('id', user.id).single();
+            
+            if (!profile || !profile.username) {
+                document.getElementById('onboarding-ui').classList.remove('hidden');
+                document.getElementById('feed').classList.add('hidden');
+            } else {
+                fetchPosts();
+            }
+        } else {
+            fetchPosts(); // Allow public to see posts
         }
     }
     checkStatus();
 
-    function toggleModal(show) {
-        document.getElementById('post-modal').classList.toggle('active', show);
+    async function saveProfile() {
+        const username = document.getElementById('set-handle').value;
+        const display_name = document.getElementById('set-display-name').value;
+        const avatar_url = document.getElementById('set-pfp').value;
+        if (!username) return alert("Handle is required!");
+
+        const { data: { user } } = await client.auth.getUser();
+        const { error } = await client.from('profiles').upsert({ id: user.id, username, display_name, avatar_url });
+        if (error) alert("Handle already taken or invalid!");
+        else location.reload();
     }
 
-    async function login() {
-        const email = document.getElementById('email-input').value;
-        const { error } = await client.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.href } });
-        if (error) alert(error.message); else alert("Check your email!");
+    async function fetchPosts() {
+        // Fix: Use a left join so posts show even if profiles are missing
+        const { data, error } = await client.from('posts').select('*, profiles(*)').order('created_at', { ascending: false });
+        const feed = document.getElementById('feed');
+        
+        if (!data || data.length === 0) {
+            feed.innerHTML = "<p style='color:#999; text-align:center;'>No posts found.</p>";
+            return;
+        }
+
+        feed.innerHTML = data.map(p => `
+            <div class="post">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                    <img src="${p.profiles?.avatar_url || 'https://api.dicebear.com/7.x/initials/svg?seed=' + (p.profiles?.username || 'anon')}" class="avatar">
+                    <div class="post-meta">
+                        ${p.profiles?.display_name || p.profiles?.username || 'Anonymous'} 
+                        ${p.profiles?.username ? `(@${p.profiles.username})` : ''}
+                    </div>
+                    <span onclick="report('${p.id}')" style="margin-left:auto; cursor:pointer; font-size:0.6rem; color:#ccc;">🚩 REPORT</span>
+                </div>
+                <span class="post-title">🔗 ${p.title}</span>
+                <p style="font-size:0.75rem; color:#888; margin-bottom:10px; font-family:monospace;">${p.url}</p>
+                <p class="post-desc">${p.desc || ''}</p>
+                <a href="${p.url}" target="_blank" style="color:#000; font-size:0.7rem; font-weight:700; text-decoration:none; border-bottom: 1px solid #000;">View Site →</a>
+            </div>
+        `).join('');
     }
 
     async function publish() {
         const title = document.getElementById('post-title').value;
         const url = document.getElementById('post-url').value;
         const desc = document.getElementById('post-desc').value;
-        const btn = document.getElementById('pub-btn');
+        if (!title || !url) return alert("Title/URL required");
 
-        if (!title || !url) return alert("Title and URL required!");
+        pendingData = { title, url, desc };
+        toggleModal('post-modal', false);
+        document.getElementById('undo-toast').classList.remove('hidden');
 
-        let count = 5;
-        btn.style.background = "#ff4444";
-        btn.innerText = `STOP! (Undo in ${count}s)`;
-        
-        btn.onclick = () => {
-            clearInterval(undoTimer);
-            btn.innerText = "PUBLISH";
-            btn.style.background = "#000";
-            btn.onclick = publish; 
-            alert("Post cancelled.");
-        };
-
-        undoTimer = setInterval(async () => {
-            count--;
-            btn.innerText = `STOP! (Undo in ${count}s)`;
-            if (count <= 0) {
-                clearInterval(undoTimer);
-                const { data: { user } } = await client.auth.getUser();
-                await client.from('posts').insert([{ title, url, desc, user_id: user.id }]);
-                location.reload();
-            }
-        }, 1000);
+        undoTimer = setTimeout(async () => {
+            const { data: { user } } = await client.auth.getUser();
+            if (!user) return alert("Please login to post!");
+            await client.from('posts').insert([{ ...pendingData, user_id: user.id }]);
+            document.getElementById('undo-toast').classList.add('hidden');
+            location.reload();
+        }, 5000);
     }
 
-    async function fetchPosts() {
-        const search = document.getElementById('search-input').value;
+    async function report(targetId) {
+        const reason = prompt("Why are you reporting this?");
+        if (!reason) return;
         const { data: { user } } = await client.auth.getUser();
-        
-        let query = client.from('posts').select('*, profiles(username)').order('created_at', { ascending: false });
-        if (search) query = query.ilike('title', `%${search}%`);
-
-        const { data } = await query;
-        const feed = document.getElementById('feed');
-        
-        feed.innerHTML = data ? data.map(p => `
-            <div class="post">
-                <div class="post-meta">👤 @${p.profiles?.username || 'user'} • ${new Date(p.created_at).toLocaleDateString()}</div>
-                <span class="post-title">🔗 ${p.title}</span>
-                <p style="font-size:0.7rem; color:#888; margin: 4px 0; font-family: monospace;">${p.url}</p>
-                <p class="post-desc">${p.desc || ''}</p>
-                <a href="${p.url}" target="_blank" style="color:#000; font-size:0.7rem; font-weight:700; text-transform:uppercase; text-decoration:none; border-bottom:1px solid #000;">View Site →</a>
-                ${user && (user.id === ADMIN_ID || user.id === p.user_id) ? `
-                    <div class="mod-tools">
-                        <button class="btn-del" onclick="deletePost('${p.id}')">Remove Entry</button>
-                    </div>
-                ` : ''}
-            </div>
-        `).join('') : 'No posts found.';
+        await client.from('reports').insert([{ reporter_id: user?.id, target_id: targetId, reason }]);
+        alert("Reported. Our AI will review this shortly.");
     }
 
-    async function deletePost(id) {
-        if(confirm("Delete?")) {
-            await client.from('posts').delete().eq('id', id);
-            fetchPosts();
-        }
+    function cancelPublish() { clearTimeout(undoTimer); document.getElementById('undo-toast').classList.add('hidden'); toggleModal('post-modal', true); }
+    function toggleModal(id, show) { document.getElementById(id).classList.toggle('active', show); }
+    async function login() {
+        const email = document.getElementById('email-input').value;
+        await client.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.href } });
+        alert("Check your email!");
     }
 </script>
 </body>
