@@ -112,41 +112,65 @@
     }
 
     async function publish() {
-        const titleRaw = document.getElementById('post-title').value;
-        const urlRaw = document.getElementById('post-url').value;
-        const descRaw = document.getElementById('post-desc').value;
+   const SB_URL = 'https://brsimqabgcqsrdjxlqyw.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJyc2ltcWFiZ2Nxc3JkanhscXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwOTExOTksImV4cCI6MjA4ODY2NzE5OX0.26MOlBfwgwfzFYvV2C6jF90vYyJpWLF5GthoOlBSTJY'; 
+    const client = supabase.createClient(SB_URL, SB_KEY);
+    const ADMIN_ID = 'b1dd5dce-4388-492e-bc79-d8a3b25ec302'; 
 
-        // Banned words check
-        const banned = ['fuck', 'shit', 'piss', 'bitch', 'porn', 'sex', 'nsfw']; 
-        const cleanTitle = titleRaw.toLowerCase().replace(/[^a-zA-Z]/g, "");
-        if (banned.some(word => cleanTitle.includes(word))) {
-            return alert("Inappropriate content detected.");
-        }
+    let undoTimer = null;
 
+    async function checkStatus() {
         const { data: { user } } = await client.auth.getUser();
-        const { error } = await client.from('posts').insert([{
-            title: titleRaw,
-            url: urlRaw,
-            desc: descRaw,
-            user_id: user.id
-        }]);
-
-        if (error) alert(error.message);
-        else location.reload();
-    }
-
-    async function deletePost(id) {
-        if(confirm("Delete this entry?")) {
-            await client.from('posts').delete().eq('id', id);
+        if (user) {
+            document.getElementById('login-ui').classList.add('hidden');
+            // This links the user to a profile so the username shows up
+            await client.from('profiles').upsert({ id: user.id, username: user.email.split('@')[0] });
             fetchPosts();
         }
+    }
+    checkStatus();
+
+    async function publish() {
+        const title = document.getElementById('post-title').value;
+        const url = document.getElementById('post-url').value;
+        const desc = document.getElementById('post-desc').value;
+        const btn = document.getElementById('pub-btn');
+
+        if (!title || !url) return alert("Title and URL required!");
+
+        // 5-SECOND UNDO TIMER
+        let count = 5;
+        const originalText = "PUBLISH";
+        btn.style.background = "#ff4444";
+        btn.innerText = `STOP! (Undo in ${count}s)`;
+        
+        btn.onclick = () => {
+            clearInterval(undoTimer);
+            btn.innerText = originalText;
+            btn.style.background = "#000";
+            btn.onclick = publish; 
+            alert("Post cancelled.");
+        };
+
+        undoTimer = setInterval(async () => {
+            count--;
+            btn.innerText = `STOP! (Undo in ${count}s)`;
+            
+            if (count <= 0) {
+                clearInterval(undoTimer);
+                const { data: { user } } = await client.auth.getUser();
+                await client.from('posts').insert([{ title, url, desc, user_id: user.id }]);
+                location.reload();
+            }
+        }, 1000);
     }
 
     async function fetchPosts() {
         const search = document.getElementById('search-input').value;
         const { data: { user } } = await client.auth.getUser();
         
-        let query = client.from('posts').select('*').order('created_at', { ascending: false });
+        // Fetch posts and JOIN with the profiles table to get the @username
+        let query = client.from('posts').select('*, profiles(username)').order('created_at', { ascending: false });
         if (search) query = query.ilike('title', `%${search}%`);
 
         const { data } = await query;
@@ -154,17 +178,28 @@
         
         feed.innerHTML = data ? data.map(p => `
             <div class="post">
-                <div class="post-meta">Entry • ${new Date(p.created_at).toLocaleDateString()}</div>
-                <span class="post-title">${p.title}</span>
+                <div class="post-meta">
+                    👤 @${p.profiles?.username || 'user'} • ${new Date(p.created_at).toLocaleDateString()}
+                </div>
+                <span class="post-title">🔗 ${p.title}</span>
+                <p style="font-size:0.7rem; color:#888; margin: 5px 0; font-family: monospace;">${p.url}</p>
                 <p class="post-desc">${p.desc || ''}</p>
                 <a href="${p.url}" target="_blank" style="color:#000; font-size:0.7rem; font-weight:700; text-transform:uppercase; text-decoration:none; border-bottom:1px solid #000;">View Site →</a>
                 ${user && (user.id === ADMIN_ID || user.id === p.user_id) ? `
                     <div class="mod-tools">
-                        <button class="btn-del" onclick="deletePost('${p.id}')">Remove</button>
+                        <button class="btn-del" onclick="deletePost('${p.id}')">Remove My Entry</button>
                     </div>
                 ` : ''}
             </div>
         `).join('') : 'No posts found.';
+    }
+
+    function toggleModal(show) { document.getElementById('post-modal').classList.toggle('active', show); }
+    async function deletePost(id) { if(confirm("Delete?")) { await client.from('posts').delete().eq('id', id); fetchPosts(); } }
+    async function login() { 
+        const email = document.getElementById('email-input').value;
+        const { error } = await client.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.href } });
+        if (error) alert(error.message); else alert("Check email!"); 
     }
 </script>
 </body>
