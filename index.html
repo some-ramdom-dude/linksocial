@@ -10,7 +10,6 @@
         :root { --accent: #000; --border: #eee; --gray: #888; }
         body { font-family: 'Inter', sans-serif; background: #fff; color: #000; margin: 0; padding: 100px 20px; display: flex; flex-direction: column; align-items: center; }
 
-        /* 1. TOP RIGHT NAVIGATION */
         .nav-header { position: fixed; top: 30px; right: 40px; display: flex; align-items: center; gap: 20px; z-index: 1000; }
         .logo { font-family: 'Montserrat', sans-serif; font-size: 1.2rem; text-transform: lowercase; text-decoration: none; color: #000; }
         
@@ -20,29 +19,23 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .btn-post:hover { transform: scale(1.05) translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-        .btn-post:active { transform: scale(0.95); }
 
-        /* 2. SEARCH & FILTERS */
         .controls { width: 100%; max-width: 500px; margin-bottom: 40px; display: flex; gap: 10px; }
         .search-bar { flex: 1; border: none; border-bottom: 1px solid var(--border); padding: 10px; font-family: inherit; }
         .search-bar:focus { outline: none; border-bottom: 1px solid #000; }
-        .filter-select { border: none; font-size: 0.7rem; text-transform: uppercase; color: var(--gray); cursor: pointer; }
 
         .container { width: 100%; max-width: 500px; }
-        .hidden { display: none; }
+        .hidden { display: none !important; }
         
-        /* Modal for Posting */
         .modal { position: fixed; inset: 0; background: rgba(255,255,255,0.95); display: flex; align-items: center; justify-content: center; z-index: 2000; opacity: 0; pointer-events: none; transition: 0.3s; }
         .modal.active { opacity: 1; pointer-events: auto; }
         .modal-content { width: 90%; max-width: 400px; }
 
-        /* POST STYLES */
         .post { padding: 30px 0; border-bottom: 1px solid #f5f5f5; position: relative; animation: fadeIn 0.5s ease forwards; }
         .post-title { font-weight: 600; font-size: 1.1rem; margin-bottom: 5px; display: block; }
         .post-meta { font-size: 0.65rem; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
         .post-desc { font-size: 0.9rem; line-height: 1.6; color: #444; margin-bottom: 15px; }
         
-        /* ADMIN CONTROLS */
         .mod-tools { margin-top: 10px; display: flex; gap: 15px; }
         .btn-del { color: #ff4444; font-size: 0.65rem; border: none; background: none; cursor: pointer; text-transform: uppercase; padding: 0; font-weight: 700; }
 
@@ -58,17 +51,12 @@
 
 <div class="controls">
     <input type="text" id="search-input" class="search-bar" placeholder="Search entries..." oninput="fetchPosts()">
-    <select id="filter-input" class="filter-select" onchange="fetchPosts()">
-        <option value="all">All Content</option>
-        <option value="safe">Safe Only</option>
-        <option value="media">Media</option>
-    </select>
 </div>
 
 <div id="login-ui" class="container">
     <h2 style="font-size: 0.8rem; letter-spacing: 2px; color: #999; text-transform: uppercase;">Identity Required</h2>
     <input type="email" id="email-input" style="width:100%; padding:15px 0; border:none; border-bottom:1px solid #eee; margin-bottom:20px;" placeholder="EMAIL">
-    <button onclick="login()" style="width:100%; padding:15px; background:#000; color:#fff; border:none; cursor:pointer;">GET ACCESS</button>
+    <button id="login-btn" onclick="login()" style="width:100%; padding:15px; background:#000; color:#fff; border:none; cursor:pointer;">GET ACCESS</button>
 </div>
 
 <div id="post-modal" class="modal">
@@ -77,7 +65,7 @@
         <input type="text" id="post-title" style="width:100%; padding:10px 0; border:none; border-bottom:1px solid #eee; margin-bottom:15px;" placeholder="TITLE">
         <input type="text" id="post-url" style="width:100%; padding:10px 0; border:none; border-bottom:1px solid #eee; margin-bottom:15px;" placeholder="URL">
         <textarea id="post-desc" rows="3" style="width:100%; padding:10px 0; border:none; border-bottom:1px solid #eee; margin-bottom:20px;" placeholder="DESCRIPTION"></textarea>
-        <button onclick="publish()" style="width:100%; padding:15px; background:#000; color:#fff; border:none; cursor:pointer;">PUBLISH</button>
+        <button id="pub-btn" onclick="publish()" style="width:100%; padding:15px; background:#000; color:#fff; border:none; cursor:pointer;">PUBLISH</button>
         <p onclick="toggleModal(false)" style="text-align:center; font-size:0.7rem; margin-top:20px; cursor:pointer; color:#999;">CANCEL</p>
     </div>
 </div>
@@ -89,7 +77,6 @@
     const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJyc2ltcWFiZ2Nxc3JkanhscXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwOTExOTksImV4cCI6MjA4ODY2NzE5OX0.26MOlBfwgwfzFYvV2C6jF90vYyJpWLF5GthoOlBSTJY'; 
     const client = supabase.createClient(SB_URL, SB_KEY);
     
-    // YOUR USER ID (Find this in Supabase Auth -> Users)
     const ADMIN_ID = 'b1dd5dce-4388-492e-bc79-d8a3b25ec302'; 
 
     async function checkStatus() {
@@ -106,40 +93,38 @@
     }
 
     async function login() {
+        const btn = document.getElementById('login-btn');
+        btn.innerText = "SENDING...";
         const email = document.getElementById('email-input').value;
-        await client.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.href } });
-        alert("Check your email!");
+        const { error } = await client.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.href } });
+        if (error) alert(error.message);
+        else alert("Check your email!");
+        btn.innerText = "GET ACCESS";
     }
 
     async function publish() {
-    const titleV = document.getElementById('post-title').value.toLowerCase();
-    const descV = document.getElementById('post-desc').value.toLowerCase();
+        const titleRaw = document.getElementById('post-title').value;
+        const descRaw = document.getElementById('post-desc').value;
+        const urlRaw = document.getElementById('post-url').value;
+        
+        const banned = ['fuck', 'shit', 'piss', 'bitch', 'porn', 'sex', 'nsfw', 'xxx', 'nude']; 
+        const cleanTitle = titleRaw.toLowerCase().replace(/[^a-zA-Z]/g, "");
+        const cleanDesc = descRaw.toLowerCase().replace(/[^a-zA-Z]/g, "");
 
-    // 1. Define your list
-    const banned = [// Profanity
-    'fuck', 'shit', 'piss', 'bitch', 'asshole', 'bastard', 'hell', 
-    // Inappropriate/Adult
-    'porn', 'sex', 'nsfw', 'xxx', 'nude', 'naked', 'adult',
-    // Scams/Spam
-    'free money', 'crypto scam', 'win a phone', 'viagra', 'casino']; 
+        if (banned.some(word => cleanTitle.includes(word) || cleanDesc.includes(word))) {
+            return alert("Inappropriate content detected.");
+        }
 
-    // 2. The "Smart Check" (Removes dots/spaces to find hidden words)
-    const cleanTitle = titleV.replace(/[^a-zA-Z]/g, "");
-    const cleanDesc = descV.replace(/[^a-zA-Z]/g, "");
+        const { data: { user } } = await client.auth.getUser();
+        const { error } = await client.from('posts').insert([{
+            title: titleRaw,
+            url: urlRaw,
+            desc: descRaw,
+            user_id: user.id
+        }]);
 
-    const isBad = banned.some(word => 
-        cleanTitle.includes(word) || cleanDesc.includes(word)
-    );
-
-    if (isBad) {
-        return alert("Your post contains words that are not allowed in this community.");
-    }
-
-    // ... rest of your publish code ...
-}
-
-        await client.from('posts').insert([content]);
-        location.reload();
+        if (error) alert(error.message);
+        else location.reload();
     }
 
     async function deletePost(id) {
@@ -161,11 +146,10 @@
         
         feed.innerHTML = data.map(p => `
             <div class="post">
-                <div class="post-meta">Entry by User • ${new Date(p.created_at).toLocaleDateString()}</div>
+                <div class="post-meta">Entry • ${new Date(p.created_at).toLocaleDateString()}</div>
                 <span class="post-title">${p.title}</span>
                 <p class="post-desc">${p.desc}</p>
                 <a href="${p.url}" target="_blank" style="color:#000; font-size:0.7rem; font-weight:700; text-transform:uppercase; text-decoration:none; border-bottom:1px solid #000;">View Site →</a>
-                
                 ${user && (user.id === ADMIN_ID || user.id === p.user_id) ? `
                     <div class="mod-tools">
                         <button class="btn-del" onclick="deletePost('${p.id}')">Remove</button>
