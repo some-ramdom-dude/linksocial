@@ -90,7 +90,7 @@
     const client = supabase.createClient(SB_URL, SB_KEY);
     
     // YOUR USER ID (Find this in Supabase Auth -> Users)
-    const ADMIN_ID = 'YOUR_ACTUAL_USER_ID_HERE'; 
+    const ADMIN_ID = 'b1dd5dce-4388-492e-bc79-d8a3b25ec302'; 
 
     async function checkStatus() {
         const { data: { user } } = await client.auth.getUser();
