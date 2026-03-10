@@ -3,134 +3,227 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LinkSocial | Minimal</title>
+    <title>LinkSocial | Premium</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: sans-serif; background: #121212; color: white; padding: 20px; }
-        .container { max-width: 500px; margin: auto; background: #1e1e1e; padding: 20px; border-radius: 10px; }
-        input, textarea { width: 100%; margin-bottom: 10px; padding: 10px; background: #333; border: none; color: white; border-radius: 5px; }
-        button { width: 100%; padding: 10px; background: #3ecf8e; border: none; color: white; font-weight: bold; cursor: pointer; border-radius: 5px; }
-        button:hover { background: #34b27b; }
-        #feed { margin-top: 20px; }
-        .post { background: #2a2a2a; padding: 15px; margin-bottom: 10px; border-radius: 8px; border-left: 4px solid #3ecf8e; }
-        .post img { width: 30px; height: 30px; border-radius: 50%; vertical-align: middle; margin-right: 10px; }
+        :root {
+            --primary: #3ecf8e;
+            --bg: #0a0a0a;
+            --card: #161616;
+            --text: #ededed;
+            --accent: #2e2e2e;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Fancy Top Right Logo */
+        .logo {
+            position: absolute;
+            top: 25px;
+            right: 30px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.5rem;
+            letter-spacing: -1px;
+            color: var(--primary);
+            text-transform: lowercase;
+            text-shadow: 0 0 15px rgba(62, 207, 142, 0.3);
+        }
+
+        .container { 
+            width: 100%; 
+            max-width: 450px; 
+            background: var(--card); 
+            padding: 35px; 
+            border-radius: 24px; 
+            border: 1px solid var(--accent);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+        }
+
+        h2 { margin-bottom: 25px; font-weight: 600; font-size: 1.2rem; color: #fff; }
+
+        input, textarea { 
+            width: 100%; 
+            margin-bottom: 15px; 
+            padding: 14px; 
+            background: #000; 
+            border: 1px solid var(--accent); 
+            color: white; 
+            border-radius: 12px; 
+            box-sizing: border-box;
+            font-family: inherit;
+            transition: border 0.3s;
+        }
+
+        input:focus { border-color: var(--primary); outline: none; }
+
+        button { 
+            width: 100%; 
+            padding: 14px; 
+            background: var(--primary); 
+            border: none; 
+            color: #000; 
+            font-weight: 700; 
+            cursor: pointer; 
+            border-radius: 12px; 
+            transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        button:hover { 
+            background: #4ef0a3; 
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(62, 207, 142, 0.4);
+        }
+
         .hidden { display: none; }
+
+        #feed { 
+            margin-top: 40px; 
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .post { 
+            background: var(--card); 
+            padding: 20px; 
+            margin-bottom: 20px; 
+            border-radius: 20px; 
+            border: 1px solid var(--accent);
+            transition: transform 0.2s;
+        }
+
+        .post:hover { transform: scale(1.02); }
+
+        .post-header { display: flex; align-items: center; margin-bottom: 12px; }
+        .post img { width: 28px; height: 28px; border-radius: 8px; margin-right: 12px; background: #000; }
+        .post-title { font-weight: 600; font-size: 1.1rem; color: #fff; }
+        .post-desc { font-size: 0.95rem; color: #999; margin-bottom: 15px; line-height: 1.5; }
+        .post-link { 
+            color: var(--primary); 
+            text-decoration: none; 
+            font-size: 0.85rem; 
+            font-weight: 700;
+            display: inline-block;
+        }
+
+        .logout-link { color: #666; text-decoration: none; font-size: 0.8rem; margin-top: 15px; display: block; text-align: center; }
+        .logout-link:hover { color: #ff4d4d; }
     </style>
 </head>
 <body>
 
+<div class="logo">linksocial</div>
+
 <div class="container">
-    <h2>LinkSocial</h2>
-    
     <div id="login-ui">
-        <input type="email" id="email" placeholder="Enter your email">
+        <h2>Welcome back</h2>
+        <input type="email" id="email-input" placeholder="name@email.com">
         <button onclick="login()">Send Magic Link</button>
     </div>
 
     <div id="post-ui" class="hidden">
-        <input type="text" id="post-title" placeholder="Title">
-        <input type="text" id="post-url" placeholder="URL (https://...)">
-        <textarea id="post-desc" placeholder="Description"></textarea>
-        <button onclick="publish()">Post to Feed</button>
-        <p><small id="user-email"></small> | <a href="#" onclick="logout()" style="color: #3ecf8e;">Logout</a></p>
-    </div>
-
-    <hr style="border: 0.5px solid #333; margin: 20px 0;">
-
-    <div id="feed">
-        <p>Loading feed...</p>
+        <h2>Create a Post</h2>
+        <input type="text" id="post-title" placeholder="What's the title?">
+        <input type="text" id="post-url" placeholder="https://website.com">
+        <textarea id="post-desc" rows="3" placeholder="Tell us about it..."></textarea>
+        <button id="publish-btn" onclick="publish()">Publish to Feed</button>
+        <a href="#" onclick="logout()" class="logout-link">Log out of <span id="user-display"></span></a>
     </div>
 </div>
 
+<div id="feed">
+    <p style="text-align:center; color:#444;">Checking community posts...</p>
+</div>
+
 <script>
-    // 1. YOUR CREDENTIALS
     const SB_URL = 'https://brsimqabgcqsrjdxlqyw.supabase.co';
-    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJyc2ltcWFiZ2Nxc3JkanhscXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwOTExOTksImV4cCI6MjA4ODY2NzE5OX0.26MOlBfwgwfzFYvV2C6jF90vYyJpWLF5GthoOlBSTJY'; // PASTE YOUR ACTUAL KEY HERE
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJyc2ltcWFiZ2Nxc3JkanhscXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwOTExOTksImV4cCI6MjA4ODY2NzE5OX0.26MOlBfwgwfzFYvV2C6jF90vYyJpWLF5GthoOlBSTJY'; 
     const client = supabase.createClient(SB_URL, SB_KEY);
 
-    // 2. CHECK LOGIN STATUS
-    async function checkUser() {
+    async function checkStatus() {
         const { data: { user } } = await client.auth.getUser();
         if (user) {
             document.getElementById('login-ui').classList.add('hidden');
             document.getElementById('post-ui').classList.remove('hidden');
-            document.getElementById('user-email').innerText = user.email;
-            loadFeed();
+            document.getElementById('user-display').innerText = user.email;
+            fetchPosts();
         } else {
-            document.getElementById('feed').innerHTML = "<p>Login to see the feed.</p>";
+            document.getElementById('feed').innerHTML = '<p style="text-align:center; color:#444;">Login to view the community feed.</p>';
         }
     }
-    checkUser();
+    checkStatus();
 
-    // 3. LOGIN FUNCTION
     async function login() {
-        const email = document.getElementById('email').value;
+        const email = document.getElementById('email-input').value;
         const { error } = await client.auth.signInWithOtp({
             email: email,
-            options: {
-                emailRedirectTo: 'https://some-ramdom-dude.github.io/linksocial/'
-            }
+            options: { emailRedirectTo: 'https://some-ramdom-dude.github.io/linksocial/' }
         });
         if (error) alert(error.message);
-        else alert("Check your email for the login link!");
+        else alert("Magic Link sent! Check your inbox.");
     }
 
-    // 4. LOGOUT FUNCTION
-    async function logout() {
-        await client.auth.signOut();
-        location.reload();
-    }
-
-    // 5. PUBLISH FUNCTION (THE ONE WE WERE FIXING)
     async function publish() {
-        const { data: { user } } = await client.auth.getUser();
-        if (!user) return alert("You must be logged in!");
+        const btn = document.getElementById('publish-btn');
+        btn.innerText = "Publishing...";
+        btn.disabled = true;
 
-        const url = document.getElementById('post-url').value;
-        const title = document.getElementById('post-title').value;
-        const desc = document.getElementById('post-desc').value;
-        const icon = `https://api.microlink.io/?url=${url}&embed=logo.url`;
+        const { data: { user } } = await client.auth.getUser();
+        const urlV = document.getElementById('post-url').value;
+        const titleV = document.getElementById('post-title').value;
+        const descV = document.getElementById('post-desc').value;
+        const iconU = `https://api.microlink.io/?url=${urlV}&embed=logo.url`;
 
         const { error } = await client
             .from('posts')
-            .insert([{ 
-                url: url, 
-                title: title, 
-                desc: desc, 
-                icon: icon, 
-                user_id: user.id 
-            }]);
+            .insert([{ url: urlV, title: titleV, desc: descV, icon: iconU, user_id: user.id }]);
 
         if (error) {
-            alert("Error: " + error.message);
-            console.error(error);
+            alert(error.message);
+            btn.innerText = "Publish to Feed";
+            btn.disabled = false;
         } else {
-            alert("Posted!");
-            location.reload();
+            location.reload(); 
         }
     }
 
-    // 6. LOAD FEED FUNCTION
-    async function loadFeed() {
-        const { data, error } = await client
-            .from('posts')
-            .select('*')
-            .order('created_at', { ascending: false });
+    async function fetchPosts() {
+        const { data, error } = await client.from('posts').select('*').order('created_at', { ascending: false });
+        if (error) return;
 
-        if (error) {
-            console.error(error);
+        const feed = document.getElementById('feed');
+        if (data.length === 0) {
+            feed.innerHTML = '<p style="text-align:center; color:#444;">No posts here yet.</p>';
             return;
         }
 
-        const feedDiv = document.getElementById('feed');
-        feedDiv.innerHTML = data.map(post => `
+        feed.innerHTML = data.map(post => `
             <div class="post">
-                <img src="${post.icon}" onerror="this.src='https://via.placeholder.com/30'">
-                <strong>${post.title}</strong>
-                <p style="font-size: 0.9em; color: #bbb;">${post.desc}</p>
-                <a href="${post.url}" target="_blank" style="color: #3ecf8e; font-size: 0.8em;">Visit Link</a>
+                <div class="post-header">
+                    <img src="${post.icon}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/124/124010.png'">
+                    <span class="post-title">${post.title}</span>
+                </div>
+                <p class="post-desc">${post.desc}</p>
+                <a href="${post.url}" target="_blank" class="post-link">OPEN CONTENT →</a>
             </div>
         `).join('');
+    }
+
+    async function logout() {
+        await client.auth.signOut();
+        location.reload();
     }
 </script>
 
