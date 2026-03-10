@@ -93,25 +93,27 @@
     }
 
     async function login() {
-        const btn = document.getElementById('login-btn');
-        btn.innerText = "SENDING...";
         const email = document.getElementById('email-input').value;
-        const { error } = await client.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.href } });
+        if (!email) return alert("Please enter an email.");
+        
+        const { error } = await client.auth.signInWithOtp({ 
+            email, 
+            options: { emailRedirectTo: window.location.href } 
+        });
+        
         if (error) alert(error.message);
-        else alert("Check your email!");
-        btn.innerText = "GET ACCESS";
+        else alert("Check your email for the link!");
     }
 
     async function publish() {
         const titleRaw = document.getElementById('post-title').value;
-        const descRaw = document.getElementById('post-desc').value;
         const urlRaw = document.getElementById('post-url').value;
-        
-        const banned = ['fuck', 'shit', 'piss', 'bitch', 'porn', 'sex', 'nsfw', 'xxx', 'nude']; 
-        const cleanTitle = titleRaw.toLowerCase().replace(/[^a-zA-Z]/g, "");
-        const cleanDesc = descRaw.toLowerCase().replace(/[^a-zA-Z]/g, "");
+        const descRaw = document.getElementById('post-desc').value;
 
-        if (banned.some(word => cleanTitle.includes(word) || cleanDesc.includes(word))) {
+        // Banned words check
+        const banned = ['fuck', 'shit', 'piss', 'bitch', 'porn', 'sex', 'nsfw']; 
+        const cleanTitle = titleRaw.toLowerCase().replace(/[^a-zA-Z]/g, "");
+        if (banned.some(word => cleanTitle.includes(word))) {
             return alert("Inappropriate content detected.");
         }
 
@@ -144,11 +146,11 @@
         const { data } = await query;
         const feed = document.getElementById('feed');
         
-        feed.innerHTML = data.map(p => `
+        feed.innerHTML = data ? data.map(p => `
             <div class="post">
                 <div class="post-meta">Entry • ${new Date(p.created_at).toLocaleDateString()}</div>
                 <span class="post-title">${p.title}</span>
-                <p class="post-desc">${p.desc}</p>
+                <p class="post-desc">${p.desc || ''}</p>
                 <a href="${p.url}" target="_blank" style="color:#000; font-size:0.7rem; font-weight:700; text-transform:uppercase; text-decoration:none; border-bottom:1px solid #000;">View Site →</a>
                 ${user && (user.id === ADMIN_ID || user.id === p.user_id) ? `
                     <div class="mod-tools">
@@ -156,7 +158,7 @@
                     </div>
                 ` : ''}
             </div>
-        `).join('');
+        `).join('') : 'No posts found.';
     }
 </script>
 </body>
