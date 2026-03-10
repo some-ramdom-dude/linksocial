@@ -3,27 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LinkSocial | Premium</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <title>LinkSocial</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800&family=Inter:wght@400&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --primary: #3ecf8e; --bg: #0a0a0a; --card: #161616; --text: #ededed; --accent: #2e2e2e; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 80px 20px 40px 20px; display: flex; flex-direction: column; align-items: center; }
-        .logo { position: fixed; top: 25px; right: 30px; font-family: 'Montserrat', sans-serif; font-size: 1.5rem; color: var(--primary); text-transform: lowercase; z-index: 100; }
-        .container { width: 100%; max-width: 450px; background: var(--card); padding: 35px; border-radius: 24px; border: 1px solid var(--accent); box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
-        h2 { margin-bottom: 25px; font-weight: 600; font-size: 1.2rem; color: #fff; text-align: center; }
-        input, textarea { width: 100%; margin-bottom: 15px; padding: 14px; background: #000; border: 1px solid var(--accent); color: white; border-radius: 12px; box-sizing: border-box; font-family: inherit; }
-        button { width: 100%; padding: 14px; background: var(--primary); border: none; color: #000; font-weight: 700; cursor: pointer; border-radius: 12px; transition: all 0.3s; text-transform: uppercase; }
-        button:hover { background: #4ef0a3; transform: translateY(-2px); }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: #ffffff; 
+            color: #000000; 
+            margin: 0; 
+            padding: 100px 20px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+        }
+
+        /* Minimalist Top Right Logo */
+        .logo {
+            position: fixed;
+            top: 30px;
+            right: 40px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.2rem;
+            text-transform: lowercase;
+            letter-spacing: -0.5px;
+            color: #000;
+        }
+
+        .container { width: 100%; max-width: 400px; }
+
+        h2 { font-weight: 400; font-size: 1rem; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+
+        input, textarea { 
+            width: 100%; 
+            margin-bottom: 10px; 
+            padding: 12px 0; 
+            background: transparent; 
+            border: none; 
+            border-bottom: 1px solid #eee; 
+            color: #000; 
+            font-family: inherit; 
+            box-sizing: border-box;
+        }
+
+        input:focus, textarea:focus { outline: none; border-bottom: 1px solid #000; }
+
+        button { 
+            width: 100%; 
+            padding: 15px; 
+            background: #000; 
+            border: none; 
+            color: #fff; 
+            cursor: pointer; 
+            margin-top: 10px;
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+
+        button:hover { opacity: 0.8; }
+
         .hidden { display: none; }
-        #feed { margin-top: 40px; width: 100%; max-width: 450px; }
-        .post { background: var(--card); padding: 20px; margin-bottom: 20px; border-radius: 20px; border: 1px solid var(--accent); }
-        .post-header { display: flex; align-items: center; margin-bottom: 12px; }
-        .post img { width: 32px; height: 32px; border-radius: 8px; margin-right: 12px; background: #222; object-fit: cover; }
-        .post-title { font-weight: 600; font-size: 1.1rem; color: #fff; }
-        .post-desc { font-size: 0.95rem; color: #999; margin-bottom: 15px; line-height: 1.5; }
-        .post-link { color: var(--primary); text-decoration: none; font-size: 0.85rem; font-weight: 700; }
-        .logout-link { color: #666; text-decoration: none; font-size: 0.8rem; margin-top: 15px; display: block; text-align: center; }
+
+        #feed { margin-top: 60px; width: 100%; max-width: 400px; }
+
+        .post { 
+            padding: 20px 0; 
+            border-bottom: 1px solid #f0f0f0; 
+        }
+
+        .post-header { display: flex; align-items: center; margin-bottom: 8px; }
+        .post img { width: 20px; height: 20px; margin-right: 10px; filter: grayscale(100%); }
+        .post-title { font-weight: 600; font-size: 0.95rem; }
+        .post-desc { font-size: 0.85rem; color: #666; margin: 5px 0 10px 0; }
+        .post-link { font-size: 0.75rem; text-decoration: underline; color: #000; font-weight: 600; }
+
+        .logout-link { color: #ccc; text-decoration: none; font-size: 0.7rem; margin-top: 20px; display: block; text-align: center; }
+        .logout-link:hover { color: #000; }
     </style>
 </head>
 <body>
@@ -32,18 +87,18 @@
 
 <div class="container">
     <div id="login-ui">
-        <h2>Enter the Community</h2>
-        <input type="email" id="email-input" placeholder="email@example.com">
-        <button onclick="login()">Get Magic Link</button>
+        <h2>Identify</h2>
+        <input type="email" id="email-input" placeholder="email address">
+        <button onclick="login()">Get Link</button>
     </div>
 
     <div id="post-ui" class="hidden">
-        <h2>New Post</h2>
-        <input type="text" id="post-title" placeholder="Catchy Title">
-        <input type="text" id="post-url" placeholder="Paste URL here (https://...)">
-        <textarea id="post-desc" rows="3" placeholder="What's this link about?"></textarea>
-        <button id="publish-btn" onclick="publish()">Publish</button>
-        <a href="#" onclick="logout()" class="logout-link">Logout: <span id="user-display"></span></a>
+        <h2>New Entry</h2>
+        <input type="text" id="post-title" placeholder="title">
+        <input type="text" id="post-url" placeholder="url">
+        <textarea id="post-desc" rows="2" placeholder="description"></textarea>
+        <button id="publish-btn" onclick="publish()">Submit</button>
+        <a href="#" onclick="logout()" class="logout-link">logout <span id="user-display"></span></a>
     </div>
 </div>
 
@@ -71,68 +126,47 @@
             email: email,
             options: { emailRedirectTo: 'https://some-ramdom-dude.github.io/linksocial/' }
         });
-        if (error) alert("Login Error: " + error.message);
-        else alert("Link sent! Check your email.");
+        if (error) alert(error.message);
+        else alert("Link sent to inbox.");
     }
 
     async function publish() {
         const btn = document.getElementById('publish-btn');
-        btn.innerText = "Processing...";
+        btn.innerText = "...";
         btn.disabled = true;
 
-        try {
-            const { data: { user } } = await client.auth.getUser();
-            if (!user) throw new Error("User not found. Please log in again.");
+        const { data: { user } } = await client.auth.getUser();
+        const urlV = document.getElementById('post-url').value;
+        const titleV = document.getElementById('post-title').value;
+        const descV = document.getElementById('post-desc').value;
+        const iconU = `https://api.microlink.io/?url=${encodeURIComponent(urlV)}&embed=logo.url`;
 
-            const urlV = document.getElementById('post-url').value;
-            const titleV = document.getElementById('post-title').value;
-            const descV = document.getElementById('post-desc').value;
-            const iconU = `https://api.microlink.io/?url=${encodeURIComponent(urlV)}&embed=logo.url`;
+        const { error } = await client
+            .from('posts')
+            .insert([{ url: urlV, title: titleV, desc: descV, icon: iconU, user_id: user.id }]);
 
-            const { error } = await client
-                .from('posts')
-                .insert([{ 
-                    url: urlV, 
-                    title: titleV, 
-                    desc: descV, 
-                    icon: iconU, 
-                    user_id: user.id 
-                }]);
-
-            if (error) {
-                // THIS ALERT WILL TELL US EXACTLY WHAT IS WRONG
-                alert("DATABASE SAYS: " + error.message + "\nHint: Check if your table columns match!");
-                console.error(error);
-            } else {
-                alert("Success! Post added.");
-                location.reload(); 
-            }
-        } catch (err) {
-            alert("System Error: " + err.message);
-        } finally {
-            btn.innerText = "Publish";
+        if (error) {
+            alert("Error: " + error.message);
+            btn.innerText = "Submit";
             btn.disabled = false;
+        } else {
+            location.reload(); 
         }
     }
 
     async function fetchPosts() {
         const { data, error } = await client.from('posts').select('*').order('created_at', { ascending: false });
-        if (error) return console.error(error);
+        if (error) return;
 
         const feed = document.getElementById('feed');
-        if (!data || data.length === 0) {
-            feed.innerHTML = '<p style="text-align:center; color:#444;">No posts yet.</p>';
-            return;
-        }
-
         feed.innerHTML = data.map(post => `
             <div class="post">
                 <div class="post-header">
-                    <img src="${post.icon}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/124/124010.png'">
+                    <img src="${post.icon}" onerror="this.style.display='none'">
                     <span class="post-title">${post.title}</span>
                 </div>
                 <p class="post-desc">${post.desc}</p>
-                <a href="${post.url}" target="_blank" class="post-link">VIEW SITE →</a>
+                <a href="${post.url}" target="_blank" class="post-link">VIEW</a>
             </div>
         `).join('');
     }
