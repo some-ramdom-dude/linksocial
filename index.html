@@ -4,117 +4,134 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LinkSocial | Minimal</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #ffffff; --text: #111; --gray: #f8f8f8; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 450px; padding: 60px 20px; }
-        nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
-        .box { background: var(--gray); padding: 25px; border-radius: 20px; margin-bottom: 30px; border: 1px solid #eee; }
-        input, textarea { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; }
-        .primary-btn { background: #000; color: #fff; border: none; padding: 12px; border-radius: 12px; cursor: pointer; width: 100%; font-weight: 600; }
-        .feed-item { display: flex; align-items: center; gap: 16px; text-decoration: none; color: inherit; padding: 18px 0; border-bottom: 1px solid #f0f0f0; }
-        .site-icon { width: 48px; height: 48px; border-radius: 12px; background: #eee; object-fit: cover; }
+        body { font-family: sans-serif; background: #121212; color: white; padding: 20px; }
+        .container { max-width: 500px; margin: auto; background: #1e1e1e; padding: 20px; border-radius: 10px; }
+        input, textarea { width: 100%; margin-bottom: 10px; padding: 10px; background: #333; border: none; color: white; border-radius: 5px; }
+        button { width: 100%; padding: 10px; background: #3ecf8e; border: none; color: white; font-weight: bold; cursor: pointer; border-radius: 5px; }
+        button:hover { background: #34b27b; }
+        #feed { margin-top: 20px; }
+        .post { background: #2a2a2a; padding: 15px; margin-bottom: 10px; border-radius: 8px; border-left: 4px solid #3ecf8e; }
+        .post img { width: 30px; height: 30px; border-radius: 50%; vertical-align: middle; margin-right: 10px; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <nav>
-        <h2>LinkSocial</h2>
-        <button id="logout-btn" style="display:none; background:none; border:none; color:#888; cursor:pointer;" onclick="logout()">Logout</button>
-    </nav>
-
-    <div id="auth-ui" class="box">
-        <p style="margin:0 0 15px 0; font-weight: 500;">Sign in to post</p>
+    <h2>LinkSocial</h2>
+    
+    <div id="login-ui">
         <input type="email" id="email" placeholder="Enter your email">
-        <button id="login-btn" class="primary-btn" onclick="login()">Get Magic Link</button>
-        <p id="auth-status" style="font-size: 13px; margin-top: 15px; display: none;"></p>
+        <button onclick="login()">Send Magic Link</button>
     </div>
 
-    <div id="post-ui" class="box" style="display:none;">
-        <p style="margin:0 0 15px 0; font-weight: 500;">Share a link</p>
-        <input type="text" id="post-url" placeholder="https://website.com">
-        <input type="text" id="post-title" placeholder="Website Name">
+    <div id="post-ui" class="hidden">
+        <input type="text" id="post-title" placeholder="Title">
+        <input type="text" id="post-url" placeholder="URL (https://...)">
         <textarea id="post-desc" placeholder="Description"></textarea>
-        <button class="primary-btn" onclick="publish()">Post to Feed</button>
+        <button onclick="publish()">Post to Feed</button>
+        <p><small id="user-email"></small> | <a href="#" onclick="logout()" style="color: #3ecf8e;">Logout</a></p>
     </div>
 
-    <div id="feed-list">Loading...</div>
+    <hr style="border: 0.5px solid #333; margin: 20px 0;">
+
+    <div id="feed">
+        <p>Loading feed...</p>
+    </div>
 </div>
 
 <script>
-    // --- PASTE YOUR KEYS HERE ---
-    const SB_URL = 'https://brsimqabgcqsrdjxlqyw.supabase.co'; 
-    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJyc2ltcWFiZ2Nxc3JkanhscXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwOTExOTksImV4cCI6MjA4ODY2NzE5OX0.26MOlBfwgwfzFYvV2C6jF90vYyJpWLF5GthoOlBSTJY';
+    // 1. YOUR CREDENTIALS
+    const SB_URL = 'https://brsimqabgcqsrjdxlqyw.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJyc2ltcWFiZ2Nxc3JkanhscXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwOTExOTksImV4cCI6MjA4ODY2NzE5OX0.26MOlBfwgwfzFYvV2C6jF90vYyJpWLF5GthoOlBSTJY'; // PASTE YOUR ACTUAL KEY HERE
     const client = supabase.createClient(SB_URL, SB_KEY);
 
-    async function init() {
+    // 2. CHECK LOGIN STATUS
+    async function checkUser() {
         const { data: { user } } = await client.auth.getUser();
         if (user) {
-            document.getElementById('auth-ui').style.display = 'none';
-            document.getElementById('post-ui').style.display = 'block';
-            document.getElementById('logout-btn').style.display = 'block';
+            document.getElementById('login-ui').classList.add('hidden');
+            document.getElementById('post-ui').classList.remove('hidden');
+            document.getElementById('user-email').innerText = user.email;
+            loadFeed();
+        } else {
+            document.getElementById('feed').innerHTML = "<p>Login to see the feed.</p>";
         }
-        fetchFeed();
     }
+    checkUser();
 
+    // 3. LOGIN FUNCTION
     async function login() {
         const email = document.getElementById('email').value;
-        const btn = document.getElementById('login-btn');
-        const status = document.getElementById('auth-status');
-        if (!email) return;
-
-        btn.innerText = "Connecting...";
-        const { error } = await client.auth.signInWithOtp({ 
-            email, 
-            options: { emailRedirectTo: window.location.href } 
+        const { error } = await client.auth.signInWithOtp({
+            email: email,
+            options: {
+                emailRedirectTo: 'https://some-ramdom-dude.github.io/linksocial/'
+            }
         });
-
-        status.style.display = 'block';
-        if (error) {
-            status.innerText = "Error: " + error.message;
-            status.style.color = "red";
-            btn.innerText = "Try Again";
-        } else {
-            status.innerText = "✨ Check your email!";
-            status.style.color = "green";
-            btn.style.display = "none";
-        }
+        if (error) alert(error.message);
+        else alert("Check your email for the login link!");
     }
 
+    // 4. LOGOUT FUNCTION
+    async function logout() {
+        await client.auth.signOut();
+        location.reload();
+    }
+
+    // 5. PUBLISH FUNCTION (THE ONE WE WERE FIXING)
     async function publish() {
         const { data: { user } } = await client.auth.getUser();
+        if (!user) return alert("You must be logged in!");
+
         const url = document.getElementById('post-url').value;
         const title = document.getElementById('post-title').value;
         const desc = document.getElementById('post-desc').value;
         const icon = `https://api.microlink.io/?url=${url}&embed=logo.url`;
 
-        const { error } = await client.from('posts').insert([
-            { url, title, description: desc, icon_url: icon, user_id: user.id }
-        ]);
-        if (!error) location.reload();
-    }
+        const { error } = await client
+            .from('posts')
+            .insert([{ 
+                url: url, 
+                title: title, 
+                desc: desc, 
+                icon: icon, 
+                user_id: user.id 
+            }]);
 
-    async function fetchFeed() {
-        const { data: posts } = await client.from('posts').select('*').order('created_at', { ascending: false });
-        const list = document.getElementById('feed-list');
-        if (posts) {
-            list.innerHTML = posts.map(item => `
-                <a href="${item.url}" target="_blank" class="feed-item">
-                    <img src="${item.icon_url}" class="site-icon" onerror="this.src='https://via.placeholder.com/50'">
-                    <div style="margin-left:10px">
-                        <h3 style="margin:0; font-size:16px;">${item.title}</h3>
-                        <p style="margin:0; font-size:13px; color:#666;">${item.description}</p>
-                    </div>
-                </a>
-            `).join('');
+        if (error) {
+            alert("Error: " + error.message);
+            console.error(error);
+        } else {
+            alert("Posted!");
+            location.reload();
         }
     }
 
-    function logout() { client.auth.signOut(); location.reload(); }
+    // 6. LOAD FEED FUNCTION
+    async function loadFeed() {
+        const { data, error } = await client
+            .from('posts')
+            .select('*')
+            .order('created_at', { ascending: false });
 
-    init();
+        if (error) {
+            console.error(error);
+            return;
+        }
+
+        const feedDiv = document.getElementById('feed');
+        feedDiv.innerHTML = data.map(post => `
+            <div class="post">
+                <img src="${post.icon}" onerror="this.src='https://via.placeholder.com/30'">
+                <strong>${post.title}</strong>
+                <p style="font-size: 0.9em; color: #bbb;">${post.desc}</p>
+                <a href="${post.url}" target="_blank" style="color: #3ecf8e; font-size: 0.8em;">Visit Link</a>
+            </div>
+        `).join('');
+    }
 </script>
 
 </body>
