@@ -7,78 +7,20 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800&family=Inter:wght@400&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: #ffffff; 
-            color: #000000; 
-            margin: 0; 
-            padding: 100px 20px; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-        }
-
-        /* Minimalist Top Right Logo */
-        .logo {
-            position: fixed;
-            top: 30px;
-            right: 40px;
-            font-family: 'Montserrat', sans-serif;
-            font-size: 1.2rem;
-            text-transform: lowercase;
-            letter-spacing: -0.5px;
-            color: #000;
-        }
-
+        body { font-family: 'Inter', sans-serif; background: #fff; color: #000; margin: 0; padding: 100px 20px; display: flex; flex-direction: column; align-items: center; }
+        .logo { position: fixed; top: 30px; right: 40px; font-family: 'Montserrat', sans-serif; font-size: 1.2rem; text-transform: lowercase; color: #000; }
         .container { width: 100%; max-width: 400px; }
-
-        h2 { font-weight: 400; font-size: 1rem; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
-
-        input, textarea { 
-            width: 100%; 
-            margin-bottom: 10px; 
-            padding: 12px 0; 
-            background: transparent; 
-            border: none; 
-            border-bottom: 1px solid #eee; 
-            color: #000; 
-            font-family: inherit; 
-            box-sizing: border-box;
-        }
-
-        input:focus, textarea:focus { outline: none; border-bottom: 1px solid #000; }
-
-        button { 
-            width: 100%; 
-            padding: 15px; 
-            background: #000; 
-            border: none; 
-            color: #fff; 
-            cursor: pointer; 
-            margin-top: 10px;
-            font-family: inherit;
-            font-size: 0.9rem;
-        }
-
-        button:hover { opacity: 0.8; }
-
+        h2 { font-weight: 400; font-size: 0.9rem; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; color: #666; }
+        input, textarea { width: 100%; margin-bottom: 15px; padding: 12px 0; background: transparent; border: none; border-bottom: 1px solid #eee; color: #000; font-family: inherit; box-sizing: border-box; }
+        input:focus { outline: none; border-bottom: 1px solid #000; }
+        button { width: 100%; padding: 15px; background: #000; border: none; color: #fff; cursor: pointer; font-family: inherit; font-size: 0.9rem; }
+        button:disabled { background: #ccc; }
         .hidden { display: none; }
-
         #feed { margin-top: 60px; width: 100%; max-width: 400px; }
-
-        .post { 
-            padding: 20px 0; 
-            border-bottom: 1px solid #f0f0f0; 
-        }
-
-        .post-header { display: flex; align-items: center; margin-bottom: 8px; }
-        .post img { width: 20px; height: 20px; margin-right: 10px; filter: grayscale(100%); }
-        .post-title { font-weight: 600; font-size: 0.95rem; }
-        .post-desc { font-size: 0.85rem; color: #666; margin: 5px 0 10px 0; }
+        .post { padding: 20px 0; border-bottom: 1px solid #f0f0f0; }
+        .post-title { font-weight: 600; font-size: 1rem; }
+        .post-desc { font-size: 0.85rem; color: #666; margin: 5px 0; }
         .post-link { font-size: 0.75rem; text-decoration: underline; color: #000; font-weight: 600; }
-
-        .logout-link { color: #ccc; text-decoration: none; font-size: 0.7rem; margin-top: 20px; display: block; text-align: center; }
-        .logout-link:hover { color: #000; }
     </style>
 </head>
 <body>
@@ -89,7 +31,7 @@
     <div id="login-ui">
         <h2>Identify</h2>
         <input type="email" id="email-input" placeholder="email address">
-        <button onclick="login()">Get Link</button>
+        <button id="login-btn" onclick="login()">Get Link</button>
     </div>
 
     <div id="post-ui" class="hidden">
@@ -98,7 +40,7 @@
         <input type="text" id="post-url" placeholder="url">
         <textarea id="post-desc" rows="2" placeholder="description"></textarea>
         <button id="publish-btn" onclick="publish()">Submit</button>
-        <a href="#" onclick="logout()" class="logout-link">logout <span id="user-display"></span></a>
+        <p style="text-align:center; font-size:0.7rem; color:#ccc; cursor:pointer;" onclick="logout()">Logout</p>
     </div>
 </div>
 
@@ -110,71 +52,61 @@
     const client = supabase.createClient(SB_URL, SB_KEY);
 
     async function checkStatus() {
-        const { data: { user } } = await client.auth.getUser();
-        if (user) {
-            document.getElementById('login-ui').classList.add('hidden');
-            document.getElementById('post-ui').classList.remove('hidden');
-            document.getElementById('user-display').innerText = user.email;
-            fetchPosts();
-        }
+        try {
+            const { data: { user } } = await client.auth.getUser();
+            if (user) {
+                document.getElementById('login-ui').classList.add('hidden');
+                document.getElementById('post-ui').classList.remove('hidden');
+                fetchPosts();
+            }
+        } catch (e) { console.error("Database offline."); }
     }
     checkStatus();
 
     async function login() {
-        const email = document.getElementById('email-input').value;
-        const { error } = await client.auth.signInWithOtp({
-            email: email,
-            options: { emailRedirectTo: 'https://some-ramdom-dude.github.io/linksocial/' }
-        });
-        if (error) alert(error.message);
-        else alert("Link sent to inbox.");
+        const btn = document.getElementById('login-btn');
+        btn.innerText = "Connecting...";
+        try {
+            const email = document.getElementById('email-input').value;
+            const { error } = await client.auth.signInWithOtp({
+                email: email,
+                options: { emailRedirectTo: 'https://some-ramdom-dude.github.io/linksocial/' }
+            });
+            if (error) alert("Error: " + error.message);
+            else alert("Check your email!");
+        } catch (err) {
+            alert("Network Error: Is your Supabase project paused?");
+        } finally { btn.innerText = "Get Link"; }
     }
 
     async function publish() {
-        const btn = document.getElementById('publish-btn');
-        btn.innerText = "...";
-        btn.disabled = true;
-
         const { data: { user } } = await client.auth.getUser();
         const urlV = document.getElementById('post-url').value;
         const titleV = document.getElementById('post-title').value;
         const descV = document.getElementById('post-desc').value;
-        const iconU = `https://api.microlink.io/?url=${encodeURIComponent(urlV)}&embed=logo.url`;
+        
+        const { error } = await client.from('posts').insert([{ 
+            url: urlV, title: titleV, desc: descV, user_id: user.id 
+        }]);
 
-        const { error } = await client
-            .from('posts')
-            .insert([{ url: urlV, title: titleV, desc: descV, icon: iconU, user_id: user.id }]);
-
-        if (error) {
-            alert("Error: " + error.message);
-            btn.innerText = "Submit";
-            btn.disabled = false;
-        } else {
-            location.reload(); 
-        }
+        if (error) alert(error.message);
+        else location.reload();
     }
 
     async function fetchPosts() {
-        const { data, error } = await client.from('posts').select('*').order('created_at', { ascending: false });
-        if (error) return;
-
-        const feed = document.getElementById('feed');
-        feed.innerHTML = data.map(post => `
-            <div class="post">
-                <div class="post-header">
-                    <img src="${post.icon}" onerror="this.style.display='none'">
-                    <span class="post-title">${post.title}</span>
+        const { data } = await client.from('posts').select('*').order('created_at', { ascending: false });
+        if (data) {
+            document.getElementById('feed').innerHTML = data.map(p => `
+                <div class="post">
+                    <span class="post-title">${p.title}</span>
+                    <p class="post-desc">${p.desc}</p>
+                    <a href="${p.url}" target="_blank" class="post-link">VIEW</a>
                 </div>
-                <p class="post-desc">${post.desc}</p>
-                <a href="${post.url}" target="_blank" class="post-link">VIEW</a>
-            </div>
-        `).join('');
+            `).join('');
+        }
     }
 
-    async function logout() {
-        await client.auth.signOut();
-        location.reload();
-    }
+    async function logout() { await client.auth.signOut(); location.reload(); }
 </script>
 
 </body>
