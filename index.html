@@ -20,7 +20,7 @@
             background: var(--bg); 
             color: var(--text); 
             margin: 0;
-            padding: 40px 20px;
+            padding: 80px 20px 40px 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -28,7 +28,7 @@
 
         /* Fancy Top Right Logo */
         .logo {
-            position: absolute;
+            position: fixed;
             top: 25px;
             right: 30px;
             font-family: 'Montserrat', sans-serif;
@@ -37,6 +37,7 @@
             color: var(--primary);
             text-transform: lowercase;
             text-shadow: 0 0 15px rgba(62, 207, 142, 0.3);
+            z-index: 100;
         }
 
         .container { 
@@ -49,7 +50,7 @@
             box-shadow: 0 20px 50px rgba(0,0,0,0.6);
         }
 
-        h2 { margin-bottom: 25px; font-weight: 600; font-size: 1.2rem; color: #fff; }
+        h2 { margin-bottom: 25px; font-weight: 600; font-size: 1.2rem; color: #fff; text-align: center; }
 
         input, textarea { 
             width: 100%; 
@@ -61,10 +62,7 @@
             border-radius: 12px; 
             box-sizing: border-box;
             font-family: inherit;
-            transition: border 0.3s;
         }
-
-        input:focus { border-color: var(--primary); outline: none; }
 
         button { 
             width: 100%; 
@@ -76,9 +74,7 @@
             cursor: pointer; 
             border-radius: 12px; 
             transition: all 0.3s;
-            font-family: 'Inter', sans-serif;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
         button:hover { 
@@ -101,25 +97,15 @@
             margin-bottom: 20px; 
             border-radius: 20px; 
             border: 1px solid var(--accent);
-            transition: transform 0.2s;
         }
-
-        .post:hover { transform: scale(1.02); }
 
         .post-header { display: flex; align-items: center; margin-bottom: 12px; }
-        .post img { width: 28px; height: 28px; border-radius: 8px; margin-right: 12px; background: #000; }
+        .post img { width: 32px; height: 32px; border-radius: 8px; margin-right: 12px; background: #222; object-fit: cover; }
         .post-title { font-weight: 600; font-size: 1.1rem; color: #fff; }
         .post-desc { font-size: 0.95rem; color: #999; margin-bottom: 15px; line-height: 1.5; }
-        .post-link { 
-            color: var(--primary); 
-            text-decoration: none; 
-            font-size: 0.85rem; 
-            font-weight: 700;
-            display: inline-block;
-        }
+        .post-link { color: var(--primary); text-decoration: none; font-size: 0.85rem; font-weight: 700; }
 
         .logout-link { color: #666; text-decoration: none; font-size: 0.8rem; margin-top: 15px; display: block; text-align: center; }
-        .logout-link:hover { color: #ff4d4d; }
     </style>
 </head>
 <body>
@@ -128,23 +114,23 @@
 
 <div class="container">
     <div id="login-ui">
-        <h2>Welcome back</h2>
-        <input type="email" id="email-input" placeholder="name@email.com">
-        <button onclick="login()">Send Magic Link</button>
+        <h2>Enter the Community</h2>
+        <input type="email" id="email-input" placeholder="email@example.com">
+        <button onclick="login()">Get Magic Link</button>
     </div>
 
     <div id="post-ui" class="hidden">
-        <h2>Create a Post</h2>
-        <input type="text" id="post-title" placeholder="What's the title?">
-        <input type="text" id="post-url" placeholder="https://website.com">
-        <textarea id="post-desc" rows="3" placeholder="Tell us about it..."></textarea>
-        <button id="publish-btn" onclick="publish()">Publish to Feed</button>
-        <a href="#" onclick="logout()" class="logout-link">Log out of <span id="user-display"></span></a>
+        <h2>New Post</h2>
+        <input type="text" id="post-title" placeholder="Catchy Title">
+        <input type="text" id="post-url" placeholder="Paste URL here (https://...)">
+        <textarea id="post-desc" rows="3" placeholder="What's this link about?"></textarea>
+        <button id="publish-btn" onclick="publish()">Publish</button>
+        <a href="#" onclick="logout()" class="logout-link">Logout: <span id="user-display"></span></a>
     </div>
 </div>
 
 <div id="feed">
-    <p style="text-align:center; color:#444;">Checking community posts...</p>
+    <p style="text-align:center; color:#444;">Fetching latest links...</p>
 </div>
 
 <script>
@@ -160,7 +146,7 @@
             document.getElementById('user-display').innerText = user.email;
             fetchPosts();
         } else {
-            document.getElementById('feed').innerHTML = '<p style="text-align:center; color:#444;">Login to view the community feed.</p>';
+            document.getElementById('feed').innerHTML = '<p style="text-align:center; color:#444;">Log in to view the feed.</p>';
         }
     }
     checkStatus();
@@ -172,27 +158,30 @@
             options: { emailRedirectTo: 'https://some-ramdom-dude.github.io/linksocial/' }
         });
         if (error) alert(error.message);
-        else alert("Magic Link sent! Check your inbox.");
+        else alert("Link sent! Check your email.");
     }
 
     async function publish() {
         const btn = document.getElementById('publish-btn');
-        btn.innerText = "Publishing...";
+        btn.innerText = "Processing...";
         btn.disabled = true;
 
         const { data: { user } } = await client.auth.getUser();
         const urlV = document.getElementById('post-url').value;
         const titleV = document.getElementById('post-title').value;
         const descV = document.getElementById('post-desc').value;
-        const iconU = `https://api.microlink.io/?url=${urlV}&embed=logo.url`;
+
+        // Default icon if the website doesn't have one
+        const fallbackIcon = 'https://cdn-icons-png.flaticon.com/512/124/124010.png';
+        const iconU = urlV ? `https://api.microlink.io/?url=${encodeURIComponent(urlV)}&embed=logo.url` : fallbackIcon;
 
         const { error } = await client
             .from('posts')
             .insert([{ url: urlV, title: titleV, desc: descV, icon: iconU, user_id: user.id }]);
 
         if (error) {
-            alert(error.message);
-            btn.innerText = "Publish to Feed";
+            alert("Database Error: " + error.message);
+            btn.innerText = "Publish";
             btn.disabled = false;
         } else {
             location.reload(); 
@@ -205,7 +194,7 @@
 
         const feed = document.getElementById('feed');
         if (data.length === 0) {
-            feed.innerHTML = '<p style="text-align:center; color:#444;">No posts here yet.</p>';
+            feed.innerHTML = '<p style="text-align:center; color:#444;">The feed is empty. Start the trend!</p>';
             return;
         }
 
@@ -216,7 +205,7 @@
                     <span class="post-title">${post.title}</span>
                 </div>
                 <p class="post-desc">${post.desc}</p>
-                <a href="${post.url}" target="_blank" class="post-link">OPEN CONTENT →</a>
+                <a href="${post.url}" target="_blank" class="post-link">VIEW SITE →</a>
             </div>
         `).join('');
     }
