@@ -10,7 +10,6 @@
         :root { --accent: #000; --border: #eee; --gray: #888; }
         body { font-family: 'Inter', sans-serif; background: #fff; color: #000; margin: 0; padding: 100px 20px; display: flex; flex-direction: column; align-items: center; }
 
-        /* 1. TOP RIGHT NAVIGATION */
         .nav-header { position: fixed; top: 30px; right: 40px; display: flex; align-items: center; gap: 20px; z-index: 1000; }
         .logo { font-family: 'Montserrat', sans-serif; font-size: 1.2rem; text-transform: lowercase; text-decoration: none; color: #000; }
         
@@ -19,10 +18,7 @@
             letter-spacing: 1px; text-transform: uppercase; cursor: pointer; border-radius: 50px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .btn-post:hover { transform: scale(1.05) translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-        .btn-post:active { transform: scale(0.95); }
 
-        /* 2. SEARCH & FILTERS */
         .controls { width: 100%; max-width: 500px; margin-bottom: 40px; display: flex; gap: 10px; }
         .search-bar { flex: 1; border: none; border-bottom: 1px solid var(--border); padding: 10px; font-family: inherit; }
         .search-bar:focus { outline: none; border-bottom: 1px solid #000; }
@@ -30,18 +26,15 @@
         .container { width: 100%; max-width: 500px; }
         .hidden { display: none !important; }
         
-        /* Modal for Posting */
         .modal { position: fixed; inset: 0; background: rgba(255,255,255,0.95); display: flex; align-items: center; justify-content: center; z-index: 2000; opacity: 0; pointer-events: none; transition: 0.3s; }
         .modal.active { opacity: 1; pointer-events: auto; }
         .modal-content { width: 90%; max-width: 400px; }
 
-        /* POST STYLES */
         .post { padding: 30px 0; border-bottom: 1px solid #f5f5f5; position: relative; animation: fadeIn 0.5s ease forwards; }
         .post-title { font-weight: 600; font-size: 1.1rem; margin-bottom: 5px; display: block; }
-        .post-meta { font-size: 0.65rem; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+        .post-meta { font-size: 0.65rem; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; font-weight: 700; }
         .post-desc { font-size: 0.9rem; line-height: 1.6; color: #444; margin-bottom: 15px; }
         
-        /* ADMIN CONTROLS */
         .mod-tools { margin-top: 10px; display: flex; gap: 15px; }
         .btn-del { color: #ff4444; font-size: 0.65rem; border: none; background: none; cursor: pointer; text-transform: uppercase; padding: 0; font-weight: 700; }
 
@@ -82,13 +75,16 @@
     const SB_URL = 'https://brsimqabgcqsrdjxlqyw.supabase.co';
     const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJyc2ltcWFiZ2Nxc3JkanhscXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwOTExOTksImV4cCI6MjA4ODY2NzE5OX0.26MOlBfwgwfzFYvV2C6jF90vYyJpWLF5GthoOlBSTJY'; 
     const client = supabase.createClient(SB_URL, SB_KEY);
-    
     const ADMIN_ID = 'b1dd5dce-4388-492e-bc79-d8a3b25ec302'; 
+
+    let undoTimer = null;
 
     async function checkStatus() {
         const { data: { user } } = await client.auth.getUser();
         if (user) {
             document.getElementById('login-ui').classList.add('hidden');
+            // Link email to a profile username
+            await client.from('profiles').upsert({ id: user.id, username: user.email.split('@')[0] });
             fetchPosts();
         }
     }
@@ -100,35 +96,9 @@
 
     async function login() {
         const email = document.getElementById('email-input').value;
-        if (!email) return alert("Please enter an email.");
-        
-        const { error } = await client.auth.signInWithOtp({ 
-            email, 
-            options: { emailRedirectTo: window.location.href } 
-        });
-        
-        if (error) alert(error.message);
-        else alert("Check your email for the link!");
+        const { error } = await client.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.href } });
+        if (error) alert(error.message); else alert("Check your email!");
     }
-
-    async function publish() {
-   const SB_URL = 'https://brsimqabgcqsrdjxlqyw.supabase.co';
-    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJyc2ltcWFiZ2Nxc3JkanhscXl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwOTExOTksImV4cCI6MjA4ODY2NzE5OX0.26MOlBfwgwfzFYvV2C6jF90vYyJpWLF5GthoOlBSTJY'; 
-    const client = supabase.createClient(SB_URL, SB_KEY);
-    const ADMIN_ID = 'b1dd5dce-4388-492e-bc79-d8a3b25ec302'; 
-
-    let undoTimer = null;
-
-    async function checkStatus() {
-        const { data: { user } } = await client.auth.getUser();
-        if (user) {
-            document.getElementById('login-ui').classList.add('hidden');
-            // This links the user to a profile so the username shows up
-            await client.from('profiles').upsert({ id: user.id, username: user.email.split('@')[0] });
-            fetchPosts();
-        }
-    }
-    checkStatus();
 
     async function publish() {
         const title = document.getElementById('post-title').value;
@@ -138,15 +108,13 @@
 
         if (!title || !url) return alert("Title and URL required!");
 
-        // 5-SECOND UNDO TIMER
         let count = 5;
-        const originalText = "PUBLISH";
         btn.style.background = "#ff4444";
         btn.innerText = `STOP! (Undo in ${count}s)`;
         
         btn.onclick = () => {
             clearInterval(undoTimer);
-            btn.innerText = originalText;
+            btn.innerText = "PUBLISH";
             btn.style.background = "#000";
             btn.onclick = publish; 
             alert("Post cancelled.");
@@ -155,7 +123,6 @@
         undoTimer = setInterval(async () => {
             count--;
             btn.innerText = `STOP! (Undo in ${count}s)`;
-            
             if (count <= 0) {
                 clearInterval(undoTimer);
                 const { data: { user } } = await client.auth.getUser();
@@ -169,7 +136,6 @@
         const search = document.getElementById('search-input').value;
         const { data: { user } } = await client.auth.getUser();
         
-        // Fetch posts and JOIN with the profiles table to get the @username
         let query = client.from('posts').select('*, profiles(username)').order('created_at', { ascending: false });
         if (search) query = query.ilike('title', `%${search}%`);
 
@@ -178,28 +144,25 @@
         
         feed.innerHTML = data ? data.map(p => `
             <div class="post">
-                <div class="post-meta">
-                    👤 @${p.profiles?.username || 'user'} • ${new Date(p.created_at).toLocaleDateString()}
-                </div>
+                <div class="post-meta">👤 @${p.profiles?.username || 'user'} • ${new Date(p.created_at).toLocaleDateString()}</div>
                 <span class="post-title">🔗 ${p.title}</span>
-                <p style="font-size:0.7rem; color:#888; margin: 5px 0; font-family: monospace;">${p.url}</p>
+                <p style="font-size:0.7rem; color:#888; margin: 4px 0; font-family: monospace;">${p.url}</p>
                 <p class="post-desc">${p.desc || ''}</p>
                 <a href="${p.url}" target="_blank" style="color:#000; font-size:0.7rem; font-weight:700; text-transform:uppercase; text-decoration:none; border-bottom:1px solid #000;">View Site →</a>
                 ${user && (user.id === ADMIN_ID || user.id === p.user_id) ? `
                     <div class="mod-tools">
-                        <button class="btn-del" onclick="deletePost('${p.id}')">Remove My Entry</button>
+                        <button class="btn-del" onclick="deletePost('${p.id}')">Remove Entry</button>
                     </div>
                 ` : ''}
             </div>
         `).join('') : 'No posts found.';
     }
 
-    function toggleModal(show) { document.getElementById('post-modal').classList.toggle('active', show); }
-    async function deletePost(id) { if(confirm("Delete?")) { await client.from('posts').delete().eq('id', id); fetchPosts(); } }
-    async function login() { 
-        const email = document.getElementById('email-input').value;
-        const { error } = await client.auth.signInWithOtp({ email, options: { emailRedirectTo: window.location.href } });
-        if (error) alert(error.message); else alert("Check email!"); 
+    async function deletePost(id) {
+        if(confirm("Delete?")) {
+            await client.from('posts').delete().eq('id', id);
+            fetchPosts();
+        }
     }
 </script>
 </body>
