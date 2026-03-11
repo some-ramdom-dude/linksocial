@@ -4,12 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LinkSocial</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22white%22/><text y=%2250%%22 x=%2250%%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22sans-serif%22 font-weight=%22bold%22 font-size=%2260%22 fill=%22black%22>LS</text></svg>">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-
-    <div id="notification" class="hidden"></div>
 
     <div id="app">
         <main id="login-ui" class="container">
@@ -17,38 +16,45 @@
             <div class="auth-form">
                 <input type="email" id="email-input" class="input-field" placeholder="Email">
                 <input type="password" id="password-input" class="input-field" placeholder="Password">
-                
                 <div class="btn-group">
                     <button class="btn-main" onclick="auth.handleAuth('login')">Login</button>
                     <button class="btn-sub" onclick="auth.handleAuth('signup')">Sign Up</button>
                 </div>
-
                 <div class="divider">OR</div>
-                
                 <button class="btn-google" onclick="auth.loginWithGoogle()">Continue with Google</button>
             </div>
         </main>
 
         <main id="main-ui" class="container hidden">
-            <div class="header">
-                <h1 class="title">LinkSocial</h1>
+            <div class="nav">
+                <button class="icon-btn" onclick="ui.openModal('mod-modal')" id="mod-btn" class="hidden">Admin</button>
                 <button class="icon-btn" onclick="ui.openModal('profile-modal')">Profile</button>
             </div>
             
-            <div class="user-card">
-                <img id="display-icon" src="https://via.placeholder.com/100" class="profile-img">
+            <div class="content">
+                <img id="display-icon" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Lucky" class="profile-img">
                 <h2 id="display-name">User</h2>
             </div>
 
             <div id="profile-modal" class="modal hidden">
                 <div class="modal-content">
                     <button class="close-btn" onclick="ui.closeModal('profile-modal')">&times;</button>
-                    <h3>Edit Profile</h3>
-                    <input type="text" id="name-edit" class="input-field" placeholder="Display Name">
-                    <input type="text" id="icon-edit" class="input-field" placeholder="Icon Image URL">
-                    <button class="btn-main" onclick="profile.save()">Save Changes</button>
+                    <h3>Settings</h3>
+                    <input type="text" id="name-edit" class="input-field" placeholder="New Name">
+                    <input type="text" id="icon-edit" class="input-field" placeholder="Icon URL">
+                    <button class="btn-main" onclick="profile.save()">Save</button>
                     <hr>
                     <button class="btn-danger" onclick="auth.logout()">Logout</button>
+                </div>
+            </div>
+
+            <div id="mod-modal" class="modal hidden">
+                <div class="modal-content">
+                    <button class="close-btn" onclick="ui.closeModal('mod-modal')">&times;</button>
+                    <h3>Moderation</h3>
+                    <input type="text" id="ban-email" class="input-field" placeholder="User Email to Ban">
+                    <button class="btn-danger" onclick="mod.banUser()">Ban User</button>
+                    <p style="font-size: 10px; color: gray; margin-top: 10px;">Deleting a user's links or banning requires Admin Role in Supabase.</p>
                 </div>
             </div>
         </main>
