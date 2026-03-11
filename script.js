@@ -1,17 +1,13 @@
 // --- 1. CONFIGURATION ---
 const SB_URL = 'https://jekgyjnftijxikhvvmeq.supabase.co';
 const SB_KEY = 'sb_publishable_FCVlQet25kUFQzX4OTONcQ_dytr_YJo';
-
-// Initialize Supabase
 const client = supabase.createClient(SB_URL, SB_KEY);
+
 let currentUser = null;
 
 // --- 2. UI CONTROLLER ---
 const ui = {
-    toggleModal: (id, show) => {
-        const el = document.getElementById(id);
-        if (el) el.classList.toggle('active', show);
-    },
+    // Controls which "screen" the user sees
     showScreen: (screenId) => {
         ['login-ui', 'onboarding-ui', 'feed-ui'].forEach(id => {
             const el = document.getElementById(id);
@@ -20,6 +16,14 @@ const ui = {
         const target = document.getElementById(screenId);
         if (target) target.classList.remove('hidden');
     },
+
+    // Toggles pop-up modals
+    toggleModal: (id, show) => {
+        const modal = document.getElementById(id);
+        if (modal) modal.classList.toggle('active', show);
+    },
+
+    // Updates buttons in the top navigation
     updateNav: (isLoggedIn) => {
         const postBtn = document.getElementById('nav-post-btn');
         const logoutBtn = document.getElementById('nav-logout-btn');
@@ -30,13 +34,20 @@ const ui = {
 
 // --- 3. AUTHENTICATION & PROFILES ---
 const auth = {
+    // Runs on page load to see who is logged in
     checkSession: async () => {
         const { data: { user } } = await client.auth.getUser();
         currentUser = user;
-        
+
         if (user) {
             ui.updateNav(true);
-            const { data: profile } = await client.from('profiles').select('*').eq('id', user.id).single();
+            // Check if user has finished their profile (username check)
+            const { data: profile, error } = await client
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .single();
+
             if (!profile || !profile.username) {
                 ui.showScreen('onboarding-ui');
             } else {
@@ -46,113 +57,136 @@ const auth = {
         } else {
             ui.updateNav(false);
             ui.showScreen('login-ui');
-            posts.fetchFeed();
+            posts.fetchFeed(); // Let guests see the feed
         }
     },
-    
+
     login: async () => {
         const email = document.getElementById('email-input').value;
-        if (!email) return alert("Please enter an email.");
-        const { error } = await client.auth.signInWithOtp({ 
-            email, 
-            options: { emailRedirectTo: window.location.href } 
+        if (!email) return alert("Please enter your email.");
+
+        const { error } = await client.auth.signInWithOtp({
+            email: email,
+            options: { emailRedirectTo: window.location.href }
         });
+
         if (error) alert(error.message);
-        else alert("Magic link sent! Check your inbox.");
+        else alert("Magic link sent! Check your email to log in.");
     },
 
     logout: async () => {
         await client.auth.signOut();
-        location.reload();
+        window.location.reload();
     },
 
     saveProfile: async () => {
-        if (!currentUser) return;
-        const username = document.getElementById('set-handle').value.trim();
-        const display_name = document.getElementById('set-display-name').value.trim();
-        const avatar_url = document.getElementById('set-pfp').value.trim();
-        
-        if (!username) return alert("Handle is required.");
+        const handle = document.getElementById('set-handle').value.trim();
+        const name = document.getElementById('set-display-name').value.trim();
+        const pfp = document.getElementById('set-pfp').value.trim();
 
-        const { error } = await client.from('profiles').upsert({ 
-            id: currentUser.id, 
-            username, 
-            display_name, 
-            avatar_url 
-        });
+        if (!handle) return alert("A handle is required!");
 
-        if (error) alert("Error saving profile: " + error.message);
-        else location.reload();
+        const { error } = await client
+            .from('profiles')
+            .upsert({ 
+                id: currentUser.id, 
+                username: handle, 
+                display_name: name, 
+                avatar_url: pfp 
+            });
+
+        if (error) {
+            console.error(error);
+            alert("Error saving profile. That handle might be taken.");
+        } else {
+            window.location.reload();
+        }
     }
 };
 
-// --- 4. POSTS & REPORTING ---
+// --- 4. POSTS & FEED ---
 const posts = {
     undoTimer: null,
     pendingData: null,
 
     fetchFeed: async () => {
-        const { data, error } = await client.from('posts').select('*, profiles(*)').order('created_at', { ascending: false });
-        const container = document.getElementById('feed-container');
-        if (!container) return;
+        const { data, error } = await client
+            .from('posts')
+            .select('*, profiles(*)')
+            .order('created_at', { ascending: false });
 
-        if (error || !data || data.length === 0) {
-            container.innerHTML = "<p style='text-align:center; color:#888; margin-top:40px;'>No posts yet.</p>";
+        const container = document.getElementById('feed-container');
+        if (error || !data) {
+            container.innerHTML = "<p>Failed to load posts.</p>";
             return;
         }
 
         container.innerHTML = data.map(p => `
             <div class="post">
                 <div class="post-header">
-                    <img src="${p.profiles?.avatar_url || 'https://api.dicebear.com/7.x/initials/svg?seed=' + (p.profiles?.username || 'anon')}" class="avatar" style="width:32px;height:32px;border-radius:50%">
-                    <span class="post-author"><b>${p.profiles?.display_name || p.profiles?.username || 'Anonymous'}</b></span>
+                    <img src="${p.profiles?.avatar_url || 'https://api.dicebear.com/7.x/identicon/svg?seed=' + p.user_id}" class="avatar">
+                    <span class="post-author">${p.profiles?.display_name || p.profiles?.username || 'Anonymous'}</span>
                     <span class="post-handle">@${p.profiles?.username || 'anon'}</span>
-                    <span class="report-flag" style="cursor:pointer;margin-left:auto" onclick="posts.report('${p.id}')">🚩</span>
+                    <span class="report-flag" onclick="posts.report('${p.id}')">🚩</span>
                 </div>
-                <a href="${p.url}" target="_blank" class="post-title" style="display:block;margin:10px 0;text-decoration:none;color:black;font-weight:bold">🔗 ${p.title}</a>
+                <a href="${p.url}" target="_blank" class="post-title">${p.title}</a>
                 <p class="post-desc">${p.description || ''}</p>
             </div>
         `).join('');
     },
 
     publish: () => {
-        if (!currentUser) return alert("You must be logged in to post.");
         const title = document.getElementById('post-title').value;
         const url = document.getElementById('post-url').value;
-        const description = document.getElementById('post-desc').value;
-        
+        const desc = document.getElementById('post-desc').value;
+
         if (!title || !url) return alert("Title and URL are required.");
 
-        posts.pendingData = { user_id: currentUser.id, title, url, description };
+        // Store data for the "Undo" window
+        posts.pendingData = { 
+            user_id: currentUser.id, 
+            title: title, 
+            url: url, 
+            description: desc 
+        };
+
         ui.toggleModal('post-modal', false);
         document.getElementById('undo-toast').classList.remove('hidden');
 
+        // Wait 5 seconds before actually sending to Supabase
         posts.undoTimer = setTimeout(async () => {
             const { error } = await client.from('posts').insert([posts.pendingData]);
-            if (error) alert(error.message);
             document.getElementById('undo-toast').classList.add('hidden');
-            posts.fetchFeed();
+            if (error) alert(error.message);
+            else posts.fetchFeed();
+            
+            // Clear the form
+            document.getElementById('post-title').value = '';
+            document.getElementById('post-url').value = '';
+            document.getElementById('post-desc').value = '';
         }, 5000);
     },
 
     cancelPublish: () => {
         clearTimeout(posts.undoTimer);
         document.getElementById('undo-toast').classList.add('hidden');
-        ui.toggleModal('post-modal', true);
+        ui.toggleModal('post-modal', true); // Re-open the modal so they can edit
     },
 
-    report: async (targetId) => {
-        const reason = prompt("Why are you reporting this?");
+    report: async (postId) => {
+        const reason = prompt("Why are you reporting this post?");
         if (!reason) return;
-        const { error } = await client.from('reports').insert([{ 
-            reporter_id: currentUser?.id, 
-            target_id: targetId, 
-            reason 
+
+        const { error } = await client.from('reports').insert([{
+            reporter_id: currentUser?.id || null,
+            target_id: postId,
+            reason: reason
         }]);
-        if (error) alert(error.message);
-        else alert("Report submitted.");
+
+        if (error) alert("Report failed.");
+        else alert("Report submitted. Our AI will review this shortly.");
     }
 };
 
-// --- 5. INITIALIZE ---
+// --- 5. INIT ---
 auth.checkSession();
