@@ -1,7 +1,6 @@
 // --- 1. CONFIGURATION ---
-// You will plug your new Supabase Project URL and Anon Key in here later.
-const SB_URL = 'YOUR_NEW_SUPABASE_URL';
-const SB_KEY = 'YOUR_NEW_SUPABASE_ANON_KEY';
+const SB_URL = 'https://jekgyjnftijxikhvvmeq.supabase.co';
+const SB_KEY = 'sb_publishable_FCVlQet25kUFQzX4OTONcQ_dytr_YJo';
 const client = supabase.createClient(SB_URL, SB_KEY);
 
 let currentUser = null;
