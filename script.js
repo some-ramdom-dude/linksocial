@@ -7,46 +7,45 @@ let currentUser = null;
 
 // --- 2. UI CONTROLLER ---
 const ui = {
-    // Controls which "screen" the user sees
     showScreen: (screenId) => {
         ['login-ui', 'onboarding-ui', 'feed-ui'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.classList.add('hidden');
+            document.getElementById(id)?.classList.add('hidden');
         });
-        const target = document.getElementById(screenId);
-        if (target) target.classList.remove('hidden');
+        document.getElementById(screenId)?.classList.remove('hidden');
     },
 
-    // Toggles pop-up modals
     toggleModal: (id, show) => {
-        const modal = document.getElementById(id);
-        if (modal) modal.classList.toggle('active', show);
+        document.getElementById(id)?.classList.toggle('active', show);
     },
 
-    // Updates buttons in the top navigation
     updateNav: (isLoggedIn) => {
-        const postBtn = document.getElementById('nav-post-btn');
-        const logoutBtn = document.getElementById('nav-logout-btn');
-        if (postBtn) postBtn.classList.toggle('hidden', !isLoggedIn);
-        if (logoutBtn) logoutBtn.classList.toggle('hidden', !isLoggedIn);
+        document.getElementById('nav-post-btn')?.classList.toggle('hidden', !isLoggedIn);
+        document.getElementById('nav-logout-btn')?.classList.toggle('hidden', !isLoggedIn);
+    },
+
+    notify: (msg, duration = 4000) => {
+        const toast = document.getElementById('status-toast');
+        const msgEl = document.getElementById('status-msg');
+        if (!toast || !msgEl) return;
+        
+        msgEl.innerText = msg.toUpperCase();
+        toast.classList.remove('hidden');
+        
+        setTimeout(() => {
+            toast.classList.add('hidden');
+        }, duration);
     }
 };
 
 // --- 3. AUTHENTICATION & PROFILES ---
 const auth = {
-    // Runs on page load to see who is logged in
     checkSession: async () => {
         const { data: { user } } = await client.auth.getUser();
         currentUser = user;
 
         if (user) {
             ui.updateNav(true);
-            // Check if user has finished their profile (username check)
-            const { data: profile, error } = await client
-                .from('profiles')
-                .select('*')
-                .eq('id', user.id)
-                .single();
+            const { data: profile } = await client.from('profiles').select('*').eq('id', user.id).single();
 
             if (!profile || !profile.username) {
                 ui.showScreen('onboarding-ui');
@@ -57,21 +56,21 @@ const auth = {
         } else {
             ui.updateNav(false);
             ui.showScreen('login-ui');
-            posts.fetchFeed(); // Let guests see the feed
+            posts.fetchFeed();
         }
     },
 
     login: async () => {
         const email = document.getElementById('email-input').value;
-        if (!email) return alert("Please enter your email.");
+        if (!email) return ui.notify("Email Required");
 
         const { error } = await client.auth.signInWithOtp({
-            email: email,
+            email,
             options: { emailRedirectTo: window.location.href }
         });
 
-        if (error) alert(error.message);
-        else alert("Magic link sent! Check your email to log in.");
+        if (error) ui.notify(error.message);
+        else ui.notify("Check your inbox for the link");
     },
 
     logout: async () => {
@@ -84,23 +83,14 @@ const auth = {
         const name = document.getElementById('set-display-name').value.trim();
         const pfp = document.getElementById('set-pfp').value.trim();
 
-        if (!handle) return alert("A handle is required!");
+        if (!handle) return ui.notify("Handle is required");
 
-        const { error } = await client
-            .from('profiles')
-            .upsert({ 
-                id: currentUser.id, 
-                username: handle, 
-                display_name: name, 
-                avatar_url: pfp 
-            });
+        const { error } = await client.from('profiles').upsert({ 
+            id: currentUser.id, username: handle, display_name: name, avatar_url: pfp 
+        });
 
-        if (error) {
-            console.error(error);
-            alert("Error saving profile. That handle might be taken.");
-        } else {
-            window.location.reload();
-        }
+        if (error) ui.notify("Handle taken or error occurred");
+        else window.location.reload();
     }
 };
 
@@ -110,14 +100,12 @@ const posts = {
     pendingData: null,
 
     fetchFeed: async () => {
-        const { data, error } = await client
-            .from('posts')
-            .select('*, profiles(*)')
-            .order('created_at', { ascending: false });
-
+        const { data, error } = await client.from('posts').select('*, profiles(*)').order('created_at', { ascending: false });
         const container = document.getElementById('feed-container');
-        if (error || !data) {
-            container.innerHTML = "<p>Failed to load posts.</p>";
+        if (!container) return;
+
+        if (error || !data || data.length === 0) {
+            container.innerHTML = "<p style='text-align:center; color:#888; padding-top:50px;'>NO ENTRIES YET</p>";
             return;
         }
 
@@ -125,7 +113,7 @@ const posts = {
             <div class="post">
                 <div class="post-header">
                     <img src="${p.profiles?.avatar_url || 'https://api.dicebear.com/7.x/identicon/svg?seed=' + p.user_id}" class="avatar">
-                    <span class="post-author">${p.profiles?.display_name || p.profiles?.username || 'Anonymous'}</span>
+                    <span class="post-author">${p.profiles?.display_name || p.profiles?.username || 'ANONYMOUS'}</span>
                     <span class="post-handle">@${p.profiles?.username || 'anon'}</span>
                     <span class="report-flag" onclick="posts.report('${p.id}')">🚩</span>
                 </div>
@@ -140,27 +128,20 @@ const posts = {
         const url = document.getElementById('post-url').value;
         const desc = document.getElementById('post-desc').value;
 
-        if (!title || !url) return alert("Title and URL are required.");
+        if (!title || !url) return ui.notify("Title and URL required");
 
-        // Store data for the "Undo" window
-        posts.pendingData = { 
-            user_id: currentUser.id, 
-            title: title, 
-            url: url, 
-            description: desc 
-        };
-
+        posts.pendingData = { user_id: currentUser.id, title, url, description: desc };
         ui.toggleModal('post-modal', false);
         document.getElementById('undo-toast').classList.remove('hidden');
 
-        // Wait 5 seconds before actually sending to Supabase
         posts.undoTimer = setTimeout(async () => {
             const { error } = await client.from('posts').insert([posts.pendingData]);
             document.getElementById('undo-toast').classList.add('hidden');
-            if (error) alert(error.message);
-            else posts.fetchFeed();
-            
-            // Clear the form
+            if (error) ui.notify(error.message);
+            else {
+                ui.notify("Published successfully");
+                posts.fetchFeed();
+            }
             document.getElementById('post-title').value = '';
             document.getElementById('post-url').value = '';
             document.getElementById('post-desc').value = '';
@@ -170,23 +151,24 @@ const posts = {
     cancelPublish: () => {
         clearTimeout(posts.undoTimer);
         document.getElementById('undo-toast').classList.add('hidden');
-        ui.toggleModal('post-modal', true); // Re-open the modal so they can edit
+        ui.toggleModal('post-modal', true);
+        ui.notify("Publishing Cancelled");
     },
 
     report: async (postId) => {
-        const reason = prompt("Why are you reporting this post?");
+        const reason = prompt("Reason for reporting?");
         if (!reason) return;
 
         const { error } = await client.from('reports').insert([{
             reporter_id: currentUser?.id || null,
             target_id: postId,
-            reason: reason
+            reason
         }]);
 
-        if (error) alert("Report failed.");
-        else alert("Report submitted. Our AI will review this shortly.");
+        if (error) ui.notify("Reporting failed");
+        else ui.notify("Report submitted for review");
     }
 };
 
-// --- 5. INIT ---
+// --- 5. START ---
 auth.checkSession();
