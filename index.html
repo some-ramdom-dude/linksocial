@@ -13,8 +13,10 @@
 
     <nav class="nav-header">
         <a href="#" class="logo">LinkSocial</a>
-        <button class="btn-primary hidden" id="nav-post-btn" onclick="ui.toggleModal('post-modal', true)">+ Post</button>
-        <button class="btn-secondary hidden" id="nav-logout-btn" onclick="auth.logout()">Sign Out</button>
+        <div class="nav-actions">
+            <button class="btn-primary hidden" id="nav-post-btn" onclick="ui.toggleModal('post-modal', true)">+ Post</button>
+            <button class="btn-secondary hidden" id="nav-logout-btn" onclick="auth.logout()">Sign Out</button>
+        </div>
     </nav>
 
     <main id="login-ui" class="container">
@@ -25,9 +27,9 @@
 
     <main id="onboarding-ui" class="container hidden">
         <h2 class="section-title">Complete Your Profile</h2>
-        <input type="text" id="set-handle" class="input-flat" placeholder="HANDLE (e.g. tech_guru) *Required">
-        <input type="text" id="set-display-name" class="input-flat" placeholder="DISPLAY NAME (Optional)">
-        <input type="text" id="set-pfp" class="input-flat" placeholder="PFP IMAGE URL (Optional)">
+        <input type="text" id="set-handle" class="input-flat" placeholder="HANDLE (Required)">
+        <input type="text" id="set-display-name" class="input-flat" placeholder="DISPLAY NAME">
+        <input type="text" id="set-pfp" class="input-flat" placeholder="PFP IMAGE URL">
         <button class="btn-primary full-width" onclick="auth.saveProfile()">Save & Start</button>
     </main>
 
@@ -51,7 +53,7 @@
     </div>
 
     <div id="undo-toast" class="toast hidden">
-        <span>POST SENT...</span>
+        <span>PUBLISHING...</span>
         <span class="undo-btn" onclick="posts.cancelPublish()">UNDO</span>
     </div>
 
