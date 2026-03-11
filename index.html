@@ -3,59 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LinkSocial</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>LinkSocial | Identity</title>
     <link rel="stylesheet" href="style.css">
-    <script src="script.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-    <nav class="nav-header">
-        <a href="#" class="logo">LinkSocial</a>
-        <div class="nav-actions">
-            <button class="btn-primary hidden" id="nav-post-btn" onclick="ui.toggleModal('post-modal', true)">+ Post</button>
-            <button class="btn-secondary hidden" id="nav-logout-btn" onclick="auth.logout()">Sign Out</button>
-        </div>
-    </nav>
+    <div id="notification" class="hidden"></div>
 
-    <main id="login-ui" class="container">
-        <h2 class="section-title">Identity Required</h2>
-        <input type="email" id="email-input" class="input-flat" placeholder="EMAIL ADDRESS">
-        <button class="btn-primary full-width" onclick="auth.login()">Get Access</button>
-    </main>
+    <div id="app">
+        <main id="login-ui" class="container">
+            <h2 class="section-title">LinkSocial</h2>
+            <p class="subtitle">CONNECT YOUR IDENTITY</p>
 
-    <main id="onboarding-ui" class="container hidden">
-        <h2 class="section-title">Complete Your Profile</h2>
-        <input type="text" id="set-handle" class="input-flat" placeholder="HANDLE (Required)">
-        <input type="text" id="set-display-name" class="input-flat" placeholder="DISPLAY NAME">
-        <input type="text" id="set-pfp" class="input-flat" placeholder="PFP IMAGE URL">
-        <button class="btn-primary full-width" onclick="auth.saveProfile()">Save & Start</button>
-    </main>
+            <div class="auth-box">
+                <input type="email" id="email-input" class="input-flat" placeholder="EMAIL ADDRESS">
+                <input type="password" id="password-input" class="input-flat" placeholder="PASSWORD">
+                
+                <div class="auth-stack">
+                    <button class="btn-primary" onclick="auth.handleAuth('login')">SIGN IN</button>
+                    <button class="btn-outline" onclick="auth.handleAuth('signup')">CREATE ACCOUNT</button>
+                </div>
 
-    <main id="feed-ui" class="container hidden">
-        <div id="feed-container"></div>
-    </main>
+                <div class="divider"><span>OR</span></div>
+                
+                <button class="btn-google" onclick="auth.loginWithGoogle()">
+                    CONTINUE WITH GOOGLE
+                </button>
+            </div>
+        </main>
 
-    <div id="post-modal" class="modal">
-        <div class="modal-content">
-            <h2 class="section-title">New Entry</h2>
-            <input type="text" id="post-title" class="input-flat" placeholder="TITLE">
-            <input type="text" id="post-url" class="input-flat" placeholder="URL">
-            <textarea id="post-desc" class="input-flat" rows="3" placeholder="DESCRIPTION"></textarea>
-            <button class="btn-primary full-width" onclick="posts.publish()">Publish</button>
-            <p class="cancel-text" onclick="ui.toggleModal('post-modal', false)">CANCEL</p>
-        </div>
+        <main id="main-ui" class="container hidden">
+            <h2 id="user-greeting">Welcome back!</h2>
+            <button class="btn-outline" onclick="auth.logout()">LOGOUT</button>
+        </main>
     </div>
 
-    <div id="status-toast" class="toast hidden">
-        <span id="status-msg"></span>
-    </div>
-
-    <div id="undo-toast" class="toast hidden">
-        <span>PUBLISHING...</span>
-        <span class="undo-btn" onclick="posts.cancelPublish()">UNDO</span>
-    </div>
-
+    <script src="script.js"></script>
 </body>
 </html>
