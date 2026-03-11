@@ -1,65 +1,46 @@
-:root {
-    --bg: #0a0a0a;
-    --card: #141414;
-    --text: #ffffff;
-    --accent: #3b82f6;
-    --border: #262626;
-}
-
 body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #ffffff;
+    color: #000000;
+    font-family: sans-serif;
+    margin: 0;
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    margin: 0;
 }
 
-.container {
-    width: 90%;
-    max-width: 400px;
-    text-align: center;
-}
+.container { width: 350px; text-align: center; padding: 20px; }
+.hidden { display: none !important; }
 
-.section-title { font-weight: 900; letter-spacing: -1px; margin-bottom: 5px; }
-.subtitle { font-size: 0.7rem; color: #666; margin-bottom: 30px; letter-spacing: 2px; }
-
-.auth-box {
-    background: var(--card);
-    padding: 30px;
-    border-radius: 12px;
-    border: 1px solid var(--border);
-}
-
-.input-flat {
+.title { font-size: 2rem; margin-bottom: 20px; }
+.input-field {
     width: 100%;
-    background: transparent;
-    border: 1px solid var(--border);
     padding: 12px;
-    color: white;
-    margin-bottom: 15px;
+    margin: 8px 0;
+    border: 1px solid #ddd;
+    border-radius: 8px;
     box-sizing: border-box;
-    border-radius: 4px;
 }
 
-.auth-stack { display: flex; gap: 10px; margin-bottom: 20px; }
+.btn-group { display: flex; gap: 10px; margin-top: 10px; }
+button { cursor: pointer; border-radius: 8px; font-weight: bold; padding: 12px; transition: 0.2s; }
 
-button {
-    cursor: pointer;
-    font-weight: 700;
-    font-size: 0.75rem;
-    padding: 12px;
-    border-radius: 4px;
-    transition: 0.2s;
+.btn-main { flex: 1; background: #000; color: #fff; border: none; }
+.btn-sub { flex: 1; background: #fff; color: #000; border: 1px solid #000; }
+.btn-google { width: 100%; background: #4285F4; color: white; border: none; margin-top: 10px; }
+.btn-danger { width: 100%; background: #ff4444; color: white; border: none; }
+
+.divider { margin: 20px 0; font-size: 0.8rem; color: #888; }
+
+/* Profile Stuff */
+.profile-img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #000; }
+.modal {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;
 }
-
-.btn-primary { flex: 1; background: white; color: black; border: none; }
-.btn-outline { flex: 1; background: transparent; color: white; border: 1px solid var(--border); }
-.btn-google { width: 100%; background: #4285F4; color: white; border: none; }
-
-.divider { margin: 20px 0; color: #444; font-size: 0.6rem; border-bottom: 1px solid var(--border); line-height: 0.1em; }
-.divider span { background: var(--card); padding: 0 10px; }
-
-.hidden { display: none; }
+.modal-content {
+    background: white; padding: 30px; border-radius: 15px; width: 300px; position: relative;
+}
+.close-btn {
+    position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 24px;
+}
