@@ -13,7 +13,7 @@
     <div id="app">
         <main id="login-ui" class="container">
             <h1 class="title">LinkSocial</h1>
-            <div class="auth-form">
+            <div class="auth-box">
                 <input type="email" id="email-input" class="input-field" placeholder="Email">
                 <input type="password" id="password-input" class="input-field" placeholder="Password">
                 <div class="btn-group">
@@ -26,35 +26,45 @@
         </main>
 
         <main id="main-ui" class="container hidden">
-            <div class="nav">
-                <button class="icon-btn" onclick="ui.openModal('mod-modal')" id="mod-btn" class="hidden">Admin</button>
-                <button class="icon-btn" onclick="ui.openModal('profile-modal')">Profile</button>
+            <div class="header-nav">
+                <div class="search-container">
+                    <input type="text" id="user-search" placeholder="Search @handle..." onkeyup="ui.handleSearch(event)">
+                </div>
+                <button class="icon-btn" onclick="ui.openModal('profile-modal')">Settings</button>
+            </div>
+
+            <div class="user-info-bar">
+                <h2 id="current-user-handle">@handle</h2>
             </div>
             
-            <div class="content">
-                <img id="display-icon" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Lucky" class="profile-img">
-                <h2 id="display-name">User</h2>
+            <div class="create-post">
+                <input type="text" id="link-input" class="input-field" placeholder="Paste link (https://...)">
+                <textarea id="post-text" class="input-field" placeholder="Write something... #hashtags @mentions"></textarea>
+                <button class="btn-main" onclick="posts.create()">Post</button>
             </div>
+
+            <div id="feed-container"></div>
 
             <div id="profile-modal" class="modal hidden">
                 <div class="modal-content">
                     <button class="close-btn" onclick="ui.closeModal('profile-modal')">&times;</button>
-                    <h3>Settings</h3>
-                    <input type="text" id="name-edit" class="input-field" placeholder="New Name">
-                    <input type="text" id="icon-edit" class="input-field" placeholder="Icon URL">
-                    <button class="btn-main" onclick="profile.save()">Save</button>
+                    <h3>Profile Settings</h3>
+                    <p id="handle-cooldown" class="cooldown-notice"></p>
+                    <input type="text" id="edit-handle" class="input-field" placeholder="@handle">
+                    <input type="text" id="edit-display-name" class="input-field" placeholder="Display Name">
+                    <input type="text" id="edit-pfp" class="input-field" placeholder="Profile Picture URL">
+                    <button class="btn-main" id="save-profile-btn" onclick="profile.update()">Update Profile</button>
                     <hr>
                     <button class="btn-danger" onclick="auth.logout()">Logout</button>
                 </div>
             </div>
 
-            <div id="mod-modal" class="modal hidden">
+            <div id="onboarding-modal" class="modal hidden">
                 <div class="modal-content">
-                    <button class="close-btn" onclick="ui.closeModal('mod-modal')">&times;</button>
-                    <h3>Moderation</h3>
-                    <input type="text" id="ban-email" class="input-field" placeholder="User Email to Ban">
-                    <button class="btn-danger" onclick="mod.banUser()">Ban User</button>
-                    <p style="font-size: 10px; color: gray; margin-top: 10px;">Deleting a user's links or banning requires Admin Role in Supabase.</p>
+                    <h2 class="title" style="font-size: 1.5rem;">Claim your @handle</h2>
+                    <p style="font-size: 0.8rem; margin-bottom: 20px;">This is unique to you. Choose wisely.</p>
+                    <input type="text" id="set-handle" class="input-field" placeholder="@username">
+                    <button class="btn-main" onclick="profile.setup()">Start Socializing</button>
                 </div>
             </div>
         </main>
