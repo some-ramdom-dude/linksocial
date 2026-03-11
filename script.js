@@ -1,8 +1,8 @@
-const SUPABASE_URL = "YOUR_URL";
-const SUPABASE_KEY = "YOUR_KEY";
+const SUPABASE_URL = "https://jekgyjnftijxikhvvmeq.supabase.co";
+const SUPABASE_KEY = "sb_publishable_FCVlQet25kUFQzX4OTONcQ_dytr_YJo";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const ADMIN_EMAIL = "your-email@gmail.com"; // Change this to your email to see Admin button
+const ADMIN_EMAIL = "ecfriendsclub@gmail.com"; // Change this to your email to see Admin button
 
 const ui = {
     openModal: (id) => document.getElementById(id).classList.remove('hidden'),
