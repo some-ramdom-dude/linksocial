@@ -1,11 +1,10 @@
-/* Core Variables & Reset */
 :root {
     --bg-color: #ffffff;
     --text-color: #000000;
     --gray-light: #f5f5f5;
     --gray-medium: #888888;
     --gray-dark: #333333;
-    --accent: #00ff00; /* For the undo button */
+    --accent: #00ff00;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -17,44 +16,52 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 100px 20px;
+    padding: 120px 20px;
 }
 
 /* Typography */
-.logo { font-family: 'Montserrat', sans-serif; font-size: 1.2rem; text-transform: lowercase; text-decoration: none; color: var(--text-color); }
-.section-title { font-size: 0.8rem; letter-spacing: 2px; color: var(--gray-medium); text-transform: uppercase; margin-bottom: 20px; }
-.cancel-text { text-align: center; font-size: 0.7rem; margin-top: 20px; cursor: pointer; color: var(--gray-medium); text-transform: uppercase; font-weight: 600; }
+.logo { font-family: 'Montserrat', sans-serif; font-size: 1.2rem; text-transform: lowercase; text-decoration: none; color: var(--text-color); letter-spacing: -1px; }
+.section-title { font-size: 0.7rem; letter-spacing: 3px; color: var(--gray-medium); text-transform: uppercase; margin-bottom: 30px; font-weight: 700; }
+.cancel-text { text-align: center; font-size: 0.7rem; margin-top: 20px; cursor: pointer; color: var(--gray-medium); text-transform: uppercase; font-weight: 700; }
 
-/* Layout & Containers */
-.container { width: 100%; max-width: 500px; position: relative; z-index: 1; }
-.nav-header { position: fixed; top: 30px; right: 40px; display: flex; align-items: center; gap: 15px; z-index: 1000; }
+/* Containers */
+.container { width: 100%; max-width: 480px; }
+.nav-header { position: fixed; top: 40px; width: 100%; max-width: 1000px; display: flex; justify-content: space-between; align-items: center; padding: 0 40px; z-index: 1000; }
 .hidden { display: none !important; }
 
-/* Inputs & Buttons */
-.input-flat { width: 100%; padding: 12px 0; border: none; border-bottom: 1px solid #eee; margin-bottom: 20px; font-family: inherit; font-size: 1rem; outline: none; transition: border-color 0.3s; }
+/* Form Elements */
+.input-flat { width: 100%; padding: 15px 0; border: none; border-bottom: 1px solid #eee; margin-bottom: 25px; font-family: inherit; font-size: 1rem; outline: none; transition: 0.3s; background: transparent; }
 .input-flat:focus { border-bottom-color: var(--text-color); }
 
-.btn-primary { background: var(--text-color); color: var(--bg-color); border: none; padding: 12px 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: opacity 0.2s; }
-.btn-primary:hover { opacity: 0.8; }
-.btn-primary.full-width { width: 100%; padding: 15px; }
+.btn-primary { background: var(--text-color); color: var(--bg-color); border: none; padding: 12px 24px; font-size: 0.7rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; }
+.btn-primary.full-width { width: 100%; padding: 18px; margin-top: 10px; }
+.btn-secondary { background: transparent; color: var(--text-color); border: 1.5px solid var(--text-color); padding: 10px 18px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; cursor: pointer; }
 
-.btn-secondary { background: transparent; color: var(--text-color); border: 1px solid var(--text-color); padding: 10px 15px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; cursor: pointer; }
+/* Feed Styling */
+.post { padding: 40px 0; border-bottom: 1px solid var(--gray-light); width: 100%; }
+.post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+.avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: var(--gray-light); border: 1px solid #eee; }
+.post-author { font-size: 0.8rem; font-weight: 700; }
+.post-handle { font-size: 0.8rem; color: var(--gray-medium); }
+.post-title { font-weight: 600; font-size: 1.2rem; display: block; margin-bottom: 6px; color: var(--text-color); text-decoration: none; }
+.post-title:hover { text-decoration: underline; }
+.post-desc { font-size: 0.95rem; color: var(--gray-dark); line-height: 1.6; margin-bottom: 15px; }
+.report-flag { margin-left: auto; cursor: pointer; color: #ddd; font-size: 0.8rem; transition: 0.2s; }
+.report-flag:hover { color: #ff0000; }
 
 /* Modals & Toasts */
 .modal { position: fixed; inset: 0; background: rgba(255,255,255,0.98); display: none; align-items: center; justify-content: center; z-index: 9999; }
 .modal.active { display: flex; }
 .modal-content { width: 90%; max-width: 400px; }
 
-.toast { position: fixed; bottom: 30px; background: var(--text-color); color: var(--bg-color); padding: 12px 24px; border-radius: 4px; font-size: 0.8rem; z-index: 10000; box-shadow: 0 4px 20px rgba(0,0,0,0.3); display: flex; gap: 20px; align-items: center; }
-.undo-btn { color: var(--accent); cursor: pointer; font-weight: 700; text-transform: uppercase; }
+.toast { 
+    position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); 
+    background: #000; color: #fff; padding: 16px 32px; font-size: 0.75rem; 
+    font-weight: 700; letter-spacing: 1px; text-transform: uppercase; 
+    z-index: 10000; display: flex; align-items: center; gap: 20px; 
+    animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+}
 
-/* Post Feed Styling */
-.post { padding: 30px 0; border-bottom: 1px solid var(--gray-light); }
-.post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-.avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: var(--gray-light); }
-.post-author { font-size: 0.75rem; font-weight: 700; }
-.post-handle { font-size: 0.75rem; color: var(--gray-medium); font-weight: 400; }
-.post-title { font-weight: 600; font-size: 1.1rem; display: block; margin-bottom: 4px; color: var(--text-color); text-decoration: none; }
-.post-desc { font-size: 0.9rem; color: var(--gray-dark); line-height: 1.5; margin-bottom: 15px; }
-.report-flag { margin-left: auto; cursor: pointer; font-size: 0.7rem; color: #ccc; transition: 0.2s; }
-.report-flag:hover { color: red; }
+@keyframes slideUp { from { bottom: -60px; opacity: 0; } to { bottom: 40px; opacity: 1; } }
+
+.undo-btn { color: var(--accent); cursor: pointer; padding-left: 20px; border-left: 1px solid #333; }
