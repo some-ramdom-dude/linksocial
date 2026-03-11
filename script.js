@@ -1,59 +1,53 @@
-// 1. INITIALIZE SUPABASE
 const SUPABASE_URL = "https://jekgyjnftijxikhvvmeq.supabase.co";
 const SUPABASE_KEY = "sb_publishable_FCVlQet25kUFQzX4OTONcQ_dytr_YJo";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// 2. UI CONTROLS
 const ui = {
-    notify: (msg) => {
-        const toast = document.getElementById('notification');
-        toast.innerText = msg;
-        toast.classList.remove('hidden');
-        setTimeout(() => toast.classList.add('hidden'), 3000);
-    },
+    notify: (m) => { alert(m); },
+    openModal: (id) => document.getElementById(id).classList.remove('hidden'),
+    closeModal: (id) => document.getElementById(id).classList.add('hidden'),
     toggleView: (isLoggedIn) => {
         document.getElementById('login-ui').classList.toggle('hidden', isLoggedIn);
         document.getElementById('main-ui').classList.toggle('hidden', !isLoggedIn);
     }
 };
 
-// 3. AUTH LOGIC
 const auth = {
     handleAuth: async (type) => {
         const email = document.getElementById('email-input').value;
         const password = document.getElementById('password-input').value;
-
-        if (!email || !password) return ui.notify("PLEASE FILL ALL FIELDS");
-
-        const { data, error } = (type === 'signup') 
+        const { error } = (type === 'signup') 
             ? await client.auth.signUp({ email, password })
             : await client.auth.signInWithPassword({ email, password });
-
-        if (error) ui.notify(error.message.toUpperCase());
-        else if (type === 'signup') ui.notify("ACCOUNT CREATED! LOG IN NOW.");
+        if (error) ui.notify(error.message);
     },
-
     loginWithGoogle: async () => {
-        ui.notify("REDIRECTING TO GOOGLE...");
-        const { error } = await client.auth.signInWithOAuth({
-            provider: 'google',
-            options: { redirectTo: window.location.href }
-        });
-        if (error) ui.notify(error.message.toUpperCase());
+        await client.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } });
     },
-
     logout: async () => {
         await client.auth.signOut();
         location.reload();
     }
 };
 
-// 4. SESSION CHECK (Keeps user logged in on refresh)
+const profile = {
+    save: async () => {
+        const name = document.getElementById('name-edit').value;
+        const icon = document.getElementById('icon-edit').value;
+        
+        // Update local UI
+        if(name) document.getElementById('display-name').innerText = name;
+        if(icon) document.getElementById('display-icon').src = icon;
+        
+        ui.closeModal('profile-modal');
+        ui.notify("Profile Updated!");
+        // Note: Real database saving would go here using client.from('profiles')...
+    }
+};
+
 client.auth.onAuthStateChange((event, session) => {
-    if (session) {
-        ui.toggleView(true);
-        document.getElementById('user-greeting').innerText = `Welcome, ${session.user.email}`;
-    } else {
-        ui.toggleView(false);
+    ui.toggleView(!!session);
+    if(session) {
+        document.getElementById('display-name').innerText = session.user.email.split('@')[0];
     }
 });
