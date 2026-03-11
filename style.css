@@ -1,7 +1,8 @@
+* { box-sizing: border-box; }
 body {
     background: #ffffff;
     color: #000000;
-    font-family: sans-serif;
+    font-family: -apple-system, system-ui, sans-serif;
     margin: 0;
     display: flex;
     justify-content: center;
@@ -9,38 +10,34 @@ body {
     min-height: 100vh;
 }
 
-.container { width: 350px; text-align: center; padding: 20px; }
+.container { width: 100%; max-width: 380px; text-align: center; padding: 40px 20px; }
 .hidden { display: none !important; }
 
-.title { font-size: 2rem; margin-bottom: 20px; }
+.title { font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 30px; }
 .input-field {
-    width: 100%;
-    padding: 12px;
-    margin: 8px 0;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-sizing: border-box;
+    width: 100%; padding: 14px; margin: 10px 0;
+    border: 1px solid #eaeaea; border-radius: 10px;
+    background: #fafafa; font-size: 1rem;
 }
 
-.btn-group { display: flex; gap: 10px; margin-top: 10px; }
-button { cursor: pointer; border-radius: 8px; font-weight: bold; padding: 12px; transition: 0.2s; }
+.btn-group { display: flex; gap: 10px; }
+button { cursor: pointer; border-radius: 10px; font-weight: 600; padding: 14px; transition: 0.15s; border: none; }
 
-.btn-main { flex: 1; background: #000; color: #fff; border: none; }
+.btn-main { flex: 1; background: #000; color: #fff; }
 .btn-sub { flex: 1; background: #fff; color: #000; border: 1px solid #000; }
-.btn-google { width: 100%; background: #4285F4; color: white; border: none; margin-top: 10px; }
-.btn-danger { width: 100%; background: #ff4444; color: white; border: none; }
+.btn-google { width: 100%; background: #fff; color: #000; border: 1px solid #eaeaea; margin-top: 10px; }
+.btn-google:hover { background: #f9f9f9; }
+.btn-danger { width: 100%; background: #ff3b30; color: white; }
 
-.divider { margin: 20px 0; font-size: 0.8rem; color: #888; }
+.nav { display: flex; justify-content: space-between; margin-bottom: 40px; }
+.icon-btn { background: #f0f0f0; padding: 8px 15px; font-size: 0.8rem; }
 
-/* Profile Stuff */
-.profile-img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #000; }
+.divider { margin: 25px 0; color: #ccc; font-size: 0.7rem; font-weight: bold; }
+
 .modal {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center;
+    background: rgba(255,255,255,0.9); display: flex; justify-content: center; align-items: center; z-index: 100;
 }
-.modal-content {
-    background: white; padding: 30px; border-radius: 15px; width: 300px; position: relative;
-}
-.close-btn {
-    position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 24px;
-}
+.modal-content { background: white; padding: 40px; border-radius: 20px; width: 320px; border: 1px solid #eee; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+.close-btn { position: absolute; top: 15px; right: 20px; background: none; font-size: 28px; color: #000; }
+.profile-img { width: 100px; height: 100px; border-radius: 50%; margin-bottom: 15px; background: #eee; }
