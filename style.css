@@ -1,9 +1,8 @@
 :root {
-    --bg-color: #ffffff;
-    --text-color: #000000;
-    --gray-light: #f5f5f5;
-    --gray-medium: #888888;
-    --gray-dark: #333333;
+    --bg: #ffffff;
+    --fg: #000000;
+    --gray: #888888;
+    --light-gray: #f5f5f5;
     --accent: #00ff00;
 }
 
@@ -11,57 +10,89 @@
 
 body {
     font-family: 'Inter', sans-serif;
-    background-color: var(--bg-color);
-    color: var(--text-color);
+    background: var(--bg);
+    color: var(--fg);
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 120px 20px;
+    justify-content: center;
+    padding-top: 140px;
 }
 
-/* Typography */
-.logo { font-family: 'Montserrat', sans-serif; font-size: 1.2rem; text-transform: lowercase; text-decoration: none; color: var(--text-color); letter-spacing: -1px; }
-.section-title { font-size: 0.7rem; letter-spacing: 3px; color: var(--gray-medium); text-transform: uppercase; margin-bottom: 30px; font-weight: 700; }
-.cancel-text { text-align: center; font-size: 0.7rem; margin-top: 20px; cursor: pointer; color: var(--gray-medium); text-transform: uppercase; font-weight: 700; }
+.nav-header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    max-width: 800px;
+    padding: 40px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    z-index: 1000;
+}
 
-/* Containers */
-.container { width: 100%; max-width: 480px; }
-.nav-header { position: fixed; top: 40px; width: 100%; max-width: 1000px; display: flex; justify-content: space-between; align-items: center; padding: 0 40px; z-index: 1000; }
+.logo { font-family: 'Montserrat', sans-serif; font-size: 1.2rem; text-decoration: none; color: var(--fg); text-transform: lowercase; }
+.container { width: 100%; max-width: 400px; padding: 20px; }
+.section-title { font-size: 0.7rem; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 40px; color: var(--gray); font-weight: 700; }
 .hidden { display: none !important; }
 
-/* Form Elements */
-.input-flat { width: 100%; padding: 15px 0; border: none; border-bottom: 1px solid #eee; margin-bottom: 25px; font-family: inherit; font-size: 1rem; outline: none; transition: 0.3s; background: transparent; }
-.input-flat:focus { border-bottom-color: var(--text-color); }
-
-.btn-primary { background: var(--text-color); color: var(--bg-color); border: none; padding: 12px 24px; font-size: 0.7rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; }
-.btn-primary.full-width { width: 100%; padding: 18px; margin-top: 10px; }
-.btn-secondary { background: transparent; color: var(--text-color); border: 1.5px solid var(--text-color); padding: 10px 18px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; cursor: pointer; }
-
-/* Feed Styling */
-.post { padding: 40px 0; border-bottom: 1px solid var(--gray-light); width: 100%; }
-.post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
-.avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: var(--gray-light); border: 1px solid #eee; }
-.post-author { font-size: 0.8rem; font-weight: 700; }
-.post-handle { font-size: 0.8rem; color: var(--gray-medium); }
-.post-title { font-weight: 600; font-size: 1.2rem; display: block; margin-bottom: 6px; color: var(--text-color); text-decoration: none; }
-.post-title:hover { text-decoration: underline; }
-.post-desc { font-size: 0.95rem; color: var(--gray-dark); line-height: 1.6; margin-bottom: 15px; }
-.report-flag { margin-left: auto; cursor: pointer; color: #ddd; font-size: 0.8rem; transition: 0.2s; }
-.report-flag:hover { color: #ff0000; }
-
-/* Modals & Toasts */
-.modal { position: fixed; inset: 0; background: rgba(255,255,255,0.98); display: none; align-items: center; justify-content: center; z-index: 9999; }
-.modal.active { display: flex; }
-.modal-content { width: 90%; max-width: 400px; }
-
-.toast { 
-    position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); 
-    background: #000; color: #fff; padding: 16px 32px; font-size: 0.75rem; 
-    font-weight: 700; letter-spacing: 1px; text-transform: uppercase; 
-    z-index: 10000; display: flex; align-items: center; gap: 20px; 
-    animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+.input-flat {
+    width: 100%;
+    padding: 15px 0;
+    border: none;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 30px;
+    font-family: inherit;
+    font-size: 1rem;
+    outline: none;
 }
 
-@keyframes slideUp { from { bottom: -60px; opacity: 0; } to { bottom: 40px; opacity: 1; } }
+.btn-primary {
+    background: var(--fg);
+    color: var(--bg);
+    border: none;
+    padding: 15px 25px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    cursor: pointer;
+}
 
-.undo-btn { color: var(--accent); cursor: pointer; padding-left: 20px; border-left: 1px solid #333; }
+.btn-secondary {
+    background: transparent;
+    border: 1px solid var(--fg);
+    padding: 10px 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.full-width { width: 100%; }
+
+.post { padding: 40px 0; border-bottom: 1px solid var(--light-gray); }
+.avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--light-gray); margin-right: 12px; }
+.post-header { display: flex; align-items: center; margin-bottom: 15px; }
+.post-author { font-weight: 700; font-size: 0.85rem; }
+.post-title { font-size: 1.3rem; font-weight: 600; text-decoration: none; color: var(--fg); display: block; margin-bottom: 8px; }
+
+.toast {
+    position: fixed;
+    bottom: 40px;
+    background: black;
+    color: white;
+    padding: 15px 30px;
+    display: flex;
+    gap: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp { from { bottom: -50px; } to { bottom: 40px; } }
+.undo-btn { color: var(--accent); cursor: pointer; }
+
+.modal { position: fixed; inset: 0; background: white; display: none; align-items: center; justify-content: center; z-index: 2000; }
+.modal.active { display: flex; }
+.cancel-text { text-align: center; margin-top: 30px; font-size: 0.7rem; color: var(--gray); cursor: pointer; font-weight: 700; }
