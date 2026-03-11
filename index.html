@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LinkSocial | Identity</title>
+    <title>LinkSocial</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -13,29 +13,44 @@
 
     <div id="app">
         <main id="login-ui" class="container">
-            <h2 class="section-title">LinkSocial</h2>
-            <p class="subtitle">CONNECT YOUR IDENTITY</p>
-
-            <div class="auth-box">
-                <input type="email" id="email-input" class="input-flat" placeholder="EMAIL ADDRESS">
-                <input type="password" id="password-input" class="input-flat" placeholder="PASSWORD">
+            <h1 class="title">LinkSocial</h1>
+            <div class="auth-form">
+                <input type="email" id="email-input" class="input-field" placeholder="Email">
+                <input type="password" id="password-input" class="input-field" placeholder="Password">
                 
-                <div class="auth-stack">
-                    <button class="btn-primary" onclick="auth.handleAuth('login')">SIGN IN</button>
-                    <button class="btn-outline" onclick="auth.handleAuth('signup')">CREATE ACCOUNT</button>
+                <div class="btn-group">
+                    <button class="btn-main" onclick="auth.handleAuth('login')">Login</button>
+                    <button class="btn-sub" onclick="auth.handleAuth('signup')">Sign Up</button>
                 </div>
 
-                <div class="divider"><span>OR</span></div>
+                <div class="divider">OR</div>
                 
-                <button class="btn-google" onclick="auth.loginWithGoogle()">
-                    CONTINUE WITH GOOGLE
-                </button>
+                <button class="btn-google" onclick="auth.loginWithGoogle()">Continue with Google</button>
             </div>
         </main>
 
         <main id="main-ui" class="container hidden">
-            <h2 id="user-greeting">Welcome back!</h2>
-            <button class="btn-outline" onclick="auth.logout()">LOGOUT</button>
+            <div class="header">
+                <h1 class="title">LinkSocial</h1>
+                <button class="icon-btn" onclick="ui.openModal('profile-modal')">Profile</button>
+            </div>
+            
+            <div class="user-card">
+                <img id="display-icon" src="https://via.placeholder.com/100" class="profile-img">
+                <h2 id="display-name">User</h2>
+            </div>
+
+            <div id="profile-modal" class="modal hidden">
+                <div class="modal-content">
+                    <button class="close-btn" onclick="ui.closeModal('profile-modal')">&times;</button>
+                    <h3>Edit Profile</h3>
+                    <input type="text" id="name-edit" class="input-field" placeholder="Display Name">
+                    <input type="text" id="icon-edit" class="input-field" placeholder="Icon Image URL">
+                    <button class="btn-main" onclick="profile.save()">Save Changes</button>
+                    <hr>
+                    <button class="btn-danger" onclick="auth.logout()">Logout</button>
+                </div>
+            </div>
         </main>
     </div>
 
