@@ -16,21 +16,25 @@
             <div class="auth-box">
                 <input type="email" id="email-input" class="input-field" placeholder="Email">
                 <input type="password" id="password-input" class="input-field" placeholder="Password">
-                <div class="btn-group">
-                    <button class="btn-main" onclick="auth.handleAuth('login')">Login</button>
-                    <button class="btn-sub" onclick="auth.handleAuth('signup')">Sign Up</button>
-                </div>
-                <div class="divider">OR</div>
-                <button class="btn-google" onclick="auth.loginWithGoogle()">Continue with Google</button>
+                <button class="btn-main" onclick="auth.handleAuth('login')">Login</button>
+                <div class="divider"><span>OR</span></div>
+                <button class="btn-google" onclick="auth.loginWithGoogle()">
+                    <img src="https://www.google.com/favicon.ico" width="14"> Continue with Google
+                </button>
+                <p class="switch-text">New here? <span onclick="auth.handleAuth('signup')">Sign Up</span></p>
             </div>
         </main>
 
         <main id="main-ui" class="container hidden">
             <div class="header-nav">
-                <div class="search-container">
-                    <input type="text" id="user-search" placeholder="Search @handle..." onkeyup="ui.handleSearch(event)">
-                </div>
+                <input type="text" id="user-search" placeholder="Search @handle..." onkeyup="ui.handleSearch(event)">
+                <button class="icon-btn" onclick="ui.toggleLibrary()">Library</button>
                 <button class="icon-btn" onclick="ui.openModal('profile-modal')">Settings</button>
+            </div>
+
+            <div id="library-view" class="hidden">
+                <h3 class="section-title">Your Private Library</h3>
+                <div id="library-container"></div>
             </div>
 
             <div class="user-info-bar">
@@ -39,35 +43,38 @@
             
             <div class="create-post">
                 <input type="text" id="link-input" class="input-field" placeholder="Paste link (https://...)">
-                <textarea id="post-text" class="input-field" placeholder="Write something... #hashtags @mentions"></textarea>
+                <textarea id="post-text" class="input-field" placeholder="What's on your mind? #hashtags @mentions"></textarea>
                 <button class="btn-main" onclick="posts.create()">Post</button>
             </div>
 
             <div id="feed-container"></div>
 
-            <div id="profile-modal" class="modal hidden">
-                <div class="modal-content">
-                    <button class="close-btn" onclick="ui.closeModal('profile-modal')">&times;</button>
-                    <h3>Profile Settings</h3>
-                    <p id="handle-cooldown" class="cooldown-notice"></p>
-                    <input type="text" id="edit-handle" class="input-field" placeholder="@handle">
-                    <input type="text" id="edit-display-name" class="input-field" placeholder="Display Name">
-                    <input type="text" id="edit-pfp" class="input-field" placeholder="Profile Picture URL">
-                    <button class="btn-main" id="save-profile-btn" onclick="profile.update()">Update Profile</button>
-                    <hr>
-                    <button class="btn-danger" onclick="auth.logout()">Logout</button>
-                </div>
-            </div>
-
-            <div id="onboarding-modal" class="modal hidden">
-                <div class="modal-content">
-                    <h2 class="title" style="font-size: 1.5rem;">Claim your @handle</h2>
-                    <p style="font-size: 0.8rem; margin-bottom: 20px;">This is unique to you. Choose wisely.</p>
-                    <input type="text" id="set-handle" class="input-field" placeholder="@username">
-                    <button class="btn-main" onclick="profile.setup()">Start Socializing</button>
-                </div>
-            </div>
+            <footer class="repo-footer">
+                <a href="https://github.com/some-ramdom-dude/linksocial" target="_blank">GitHub repository</a>
+            </footer>
         </main>
+    </div>
+
+    <div id="profile-modal" class="modal hidden">
+        <div class="modal-content">
+            <button class="close-btn" onclick="ui.closeModal('profile-modal')">&times;</button>
+            <h3>Settings</h3>
+            <p id="handle-cooldown" class="cooldown-notice"></p>
+            <input type="text" id="edit-handle" class="input-field" placeholder="@handle">
+            <input type="text" id="edit-display-name" class="input-field" placeholder="Display Name">
+            <button class="btn-main" id="save-profile-btn" onclick="profile.update()">Update Profile</button>
+            <hr>
+            <button class="btn-danger" onclick="auth.logout()">Logout</button>
+        </div>
+    </div>
+
+    <div id="onboarding-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Welcome!</h2>
+            <p>Pick your unique handle to start.</p>
+            <input type="text" id="set-handle" class="input-field" placeholder="@username">
+            <button class="btn-main" onclick="profile.setup()">Start Socializing</button>
+        </div>
     </div>
 
     <script src="script.js"></script>
