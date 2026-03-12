@@ -3,11 +3,12 @@ const SUPABASE_KEY = "sb_publishable_FCVlQet25kUFQzX4OTONcQ_dytr_YJo";
 const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const ADMIN_EMAIL = "ecfriendsclub@gmail.com";
-let currentUser = null;
-let userProfile = null;
+let currentSessionUser = null;
+let activeProfile = null;
 
 function toast(msg) {
     const c = document.getElementById('toast-container');
+    if(!c) return;
     const t = document.createElement('div');
     t.className = 'toast'; t.innerText = msg;
     c.appendChild(t);
@@ -30,44 +31,53 @@ const ui = {
             btn.classList.add('active');
         }
         const container = document.getElementById('profile-posts-container');
-        container.innerHTML = '<p class="loading">Loading posts...</p>';
+        container.innerHTML = '<p>Loading...</p>';
         
         const table = type === 'saved' ? 'saved_posts' : 'likes';
-        const { data, error } = await client.from(table).select('posts(*)').eq('user_id', currentUser.id);
+        const { data, error } = await client.from(table).select('posts(*)').eq('user_id', currentSessionUser.id);
         
-        container.innerHTML = (data && data.length) ? '' : `<p class="empty">No ${type} posts yet.</p>`;
-        data?.forEach(item => {
-            if(item.posts) posts.render(item.posts, container);
-        });
+        if(error) return console.error("Tab Error:", error);
+
+        container.innerHTML = (data && data.length) ? '' : `<p>No ${type} posts.</p>`;
+        data?.forEach(item => { if(item.posts) posts.render(item.posts, container); });
     }
 };
 
 const profile = {
     load: async (user) => {
-        currentUser = user;
+        currentSessionUser = user;
+        console.log("Logged in as:", user.email);
+
         const { data, error } = await client.from('profiles').select('*').eq('id', user.id).single();
-        if (error || !data) ui.openModal('onboarding-modal');
-        else {
-            userProfile = data;
+        
+        if (error || !data) {
+            console.log("No profile found, opening onboarding.");
+            ui.openModal('onboarding-modal');
+        } else {
+            activeProfile = data;
             document.getElementById('current-user-handle-display').innerText = data.handle;
             document.getElementById('view-handle').innerText = data.handle;
             document.getElementById('view-display-name').innerText = data.display_name || data.handle;
-            document.getElementById('view-pfp').src = data.avatar_url || `https://api.dicebear.com/7.x/identicon/svg?seed=${data.handle}`;
+            document.getElementById('view-pfp').src = `https://api.dicebear.com/7.x/identicon/svg?seed=${data.handle}`;
+            
+            // Initial Feed Load
+            const { data: allPosts } = await client.from('posts').select('*').order('created_at', { ascending: false });
+            const feed = document.getElementById('feed-container');
+            feed.innerHTML = '';
+            allPosts?.forEach(p => posts.render(p, feed));
         }
     },
     setup: async () => {
         let h = document.getElementById('set-handle').value.trim().toLowerCase();
         if(!h.startsWith('@')) h = '@' + h;
-        const { data: existing } = await client.from('profiles').select('id').eq('handle', h).maybeSingle();
-        if (existing) return toast("Handle taken!");
-
+        
         const { error } = await client.from('profiles').upsert({ 
-            id: currentUser.id, 
+            id: currentSessionUser.id, 
             handle: h,
-            avatar_url: `https://api.dicebear.com/7.x/identicon/svg?seed=${h}`
+            is_admin: (currentSessionUser.email === ADMIN_EMAIL)
         });
         
-        if (error) toast("Error claiming handle.");
+        if (error) toast("Setup error: " + error.message); 
         else location.reload();
     }
 };
@@ -77,41 +87,50 @@ const posts = {
         const text = document.getElementById('post-text').value;
         const link = document.getElementById('link-input').value;
         
-        const { data, error } = await client.from('posts').insert({
-            user_id: currentUser.id,
-            content: text,
-            link_url: link
-        }).select();
+        if(!text && !link) return toast("Post is empty!");
+        if(!currentSessionUser) return toast("User not authenticated.");
 
-        if (error) toast("Error posting.");
-        else {
+        console.log("Attempting to post...");
+
+        const { data, error } = await client.from('posts').insert([
+            {
+                user_id: currentSessionUser.id,
+                content: text,
+                link_url: link
+            }
+        ]).select();
+
+        if (error) {
+            console.error("Post Insert Error:", error);
+            toast("Error: " + error.message);
+        } else {
+            console.log("Post successful:", data);
             toast("Posted!");
             ui.closeModal('post-modal');
-            location.reload();
+            location.reload(); 
         }
     },
     render: (post, container) => {
-        const isMod = userProfile.role === 'admin' || userProfile.role === 'mod';
+        const isMod = activeProfile?.is_admin === true;
         const html = `
-            <div class="post-card" id="post-${post.id}">
-                ${isMod ? `<button class="mod-btn" onclick="admin.deletePost('${post.id}')">Delete</button>` : ''}
-                <div class="post-header"><strong>${userProfile.handle}</strong></div>
+            <div class="post-card" id="post-${post.id}" style="border:1px solid #eee; padding:15px; margin-bottom:10px; border-radius:15px; position:relative;">
+                ${isMod ? `<button onclick="admin.deletePost('${post.id}')" style="position:absolute; right:10px; top:10px; color:red; border:none; background:none; cursor:pointer;">DELETE</button>` : ''}
                 <p>${post.content}</p>
-                ${post.link_url ? `<a href="${post.link_url}" target="_blank" class="post-link-preview">${post.link_url}</a>` : ''}
-                <div class="post-actions">
-                    <span class="action-item" onclick="posts.toggleAction('${post.id}', 'likes')">❤️</span>
-                    <span class="action-item" onclick="posts.toggleAction('${post.id}', 'saved_posts')">🔖</span>
+                ${post.link_url ? `<a href="${post.link_url}" target="_blank" style="color:blue;">${post.link_url}</a>` : ''}
+                <div style="margin-top:10px; font-size:12px;">
+                    <button onclick="posts.toggleAction('${post.id}', 'likes')">❤️ Like</button>
+                    <button onclick="posts.toggleAction('${post.id}', 'saved_posts')">🔖 Save</button>
                 </div>
             </div>`;
-        container.insertAdjacentHTML('afterbegin', html);
+        container.insertAdjacentHTML('beforeend', html);
     },
     toggleAction: async (postId, table) => {
-        const { data: existing } = await client.from(table).select('*').eq('post_id', postId).eq('user_id', currentUser.id).maybeSingle();
+        const { data: existing } = await client.from(table).select('*').eq('post_id', postId).eq('user_id', currentSessionUser.id).maybeSingle();
         if(existing) {
-            await client.from(table).delete().eq('post_id', postId).eq('user_id', currentUser.id);
-            toast("Removed!");
+            await client.from(table).delete().eq('post_id', postId).eq('user_id', currentSessionUser.id);
+            toast("Removed");
         } else {
-            await client.from(table).insert({ post_id: postId, user_id: currentUser.id });
+            await client.from(table).insert({ post_id: postId, user_id: currentSessionUser.id });
             toast("Saved!");
         }
     }
@@ -119,10 +138,11 @@ const posts = {
 
 const admin = {
     deletePost: async (postId) => {
-        if(confirm("Admin: Delete this post?")) {
-            await client.from('posts').delete().eq('id', postId);
+        if(!confirm("Delete this post?")) return;
+        const { error } = await client.from('posts').delete().eq('id', postId);
+        if(!error) {
             document.getElementById(`post-${postId}`).remove();
-            toast("Post deleted by Admin");
+            toast("Deleted.");
         }
     }
 };
@@ -131,11 +151,12 @@ const auth = {
     handleAuth: async (type) => {
         const email = document.getElementById('email-input').value;
         const password = document.getElementById('password-input').value;
-        const { error } = (type === 'signup') ? await client.auth.signUp({email, password}) : await client.auth.signInWithPassword({email, password});
+        const { error } = (type === 'signup') 
+            ? await client.auth.signUp({email, password}) 
+            : await client.auth.signInWithPassword({email, password});
+        
         if (error) toast(error.message);
-    },
-    loginWithGoogle: async () => {
-        await client.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + window.location.pathname } });
+        else if (type === 'signup') toast("Check your email!");
     },
     logout: async () => { await client.auth.signOut(); location.reload(); }
 };
