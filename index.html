@@ -20,35 +20,39 @@
         body { background: var(--bg); color: var(--text); margin: 0; padding-bottom: 50px; }
         .hidden { display: none !important; }
 
-        /* Modern Auth Page */
+        /* Auth UI */
         .auth-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #fafafa; }
         .auth-card { background: white; padding: 40px; border-radius: 32px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); width: 100%; max-width: 400px; text-align: center; }
         .logo-text { font-size: 2.2rem; font-weight: 800; letter-spacing: -1.5px; margin-bottom: 30px; }
         .logo-text span { color: var(--primary); }
 
-        /* App Layout */
+        /* Navigation */
         .glass-header { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); padding: 15px 20px; }
         .nav-content { max-width: 600px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
-        .nav-actions { display: flex; gap: 12px; }
+        .nav-actions { display: flex; gap: 12px; align-items: center; }
 
-        /* Buttons & Inputs */
+        /* Inputs & Buttons */
         .btn-main { background: var(--text); color: white; border: none; padding: 12px 24px; border-radius: 50px; font-weight: 600; cursor: pointer; }
-        .icon-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 50%; width: 40px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .icon-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 50%; width: 40px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
         .input-modern { width: 100%; padding: 15px; border-radius: 15px; border: 1px solid var(--border); background: var(--surface); margin-bottom: 12px; outline: none; }
         .input-modern:focus { border-color: var(--primary); }
 
-        /* Feed & Post Cards */
+        /* Cards */
         .view-content { max-width: 600px; margin: 20px auto; padding: 0 20px; }
         .post-card { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 25px; margin-bottom: 20px; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
         .post-card p { line-height: 1.5; margin: 10px 0; }
-        .post-link { color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+        .post-link { color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.9rem; word-break: break-all; }
         
-        /* Mod Delete Button */
-        .mod-delete { position: absolute; top: 15px; right: 15px; color: #ff4d4d; font-weight: 800; cursor: pointer; background: none; border: none; font-size: 14px; }
+        .mod-delete { position: absolute; top: 15px; right: 15px; color: #ff4d4d; font-weight: 800; cursor: pointer; background: none; border: none; font-size: 12px; }
 
-        /* Toast Notifications */
+        /* Modals */
+        .modal-overlay { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+        .modal-box { background: white; padding: 30px; border-radius: 30px; width: 90%; max-width: 400px; position: relative; }
+
         #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; }
         .toast { background: var(--text); color: white; padding: 12px 25px; border-radius: 50px; font-size: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 10px; }
+        
+        label { display: block; font-size: 11px; font-weight: 800; margin-bottom: 5px; color: #888; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -68,24 +72,26 @@
         <main id="main-ui" class="hidden">
             <header class="glass-header">
                 <div class="nav-content">
-                    <h2 style="margin:0; letter-spacing:-1px;">LS</h2>
+                    <h2 style="margin:0; letter-spacing:-1px; color: var(--primary); cursor: pointer;" onclick="ui.showView('feed')">LS</h2>
                     <div class="nav-actions">
                         <button class="btn-main" onclick="ui.openModal('post-modal')">Post</button>
                         <button class="icon-btn" onclick="ui.showView('profile')">👤</button>
+                        <button class="icon-btn" onclick="ui.openModal('settings-modal')">⚙️</button>
                     </div>
                 </div>
             </header>
 
             <section id="feed-view" class="view-content">
-                <h1 id="current-user-handle-display" style="font-weight: 800; font-size: 2rem;">@handle</h1>
+                <h1 id="current-user-handle-display" style="font-weight: 800; font-size: 2rem; margin-bottom: 30px;">@handle</h1>
                 <div id="feed-container"></div>
             </section>
 
             <section id="profile-view" class="view-content hidden">
                 <button class="btn-main" onclick="ui.showView('feed')" style="background:var(--surface); color:var(--text); margin-bottom:20px;">← Back</button>
-                <div style="text-align:center; padding: 30px 0;">
-                    <img id="view-pfp" src="" style="width:100px; height:100px; border-radius:50%; background:#eee;">
-                    <h2 id="view-handle" style="margin-top:15px;">@handle</h2>
+                <div style="text-align:center; padding: 30px 0; border-bottom: 1px solid var(--border); margin-bottom: 30px;">
+                    <img id="view-pfp" src="" style="width:100px; height:100px; border-radius:50%; background:#eee; object-fit: cover; border: 3px solid var(--border);">
+                    <h2 id="view-display-name" style="margin-bottom:0;">Display Name</h2>
+                    <p id="view-handle" style="margin-top:5px; color:#666; font-weight:600;">@handle</p>
                     <button class="btn-main" onclick="auth.logout()" style="background:#fff; border:1px solid #ff4d4d; color:#ff4d4d; margin-top:10px;">Logout</button>
                 </div>
                 <div id="profile-posts-container"></div>
@@ -93,9 +99,9 @@
         </main>
     </div>
 
-    <div id="post-modal" class="hidden" style="position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.5);">
-        <div style="background:white; padding:30px; border-radius:30px; width:90%; max-width:450px; position:relative;">
-            <button onclick="ui.closeModal('post-modal')" style="position:absolute; right:20px; top:20px; border:none; background:none; font-size:20px; cursor:pointer;">&times;</button>
+    <div id="post-modal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <button onclick="ui.closeModal('post-modal')" style="position:absolute; right:20px; top:20px; border:none; background:none; font-size:24px; cursor:pointer;">&times;</button>
             <h3 style="margin-top:0;">New Post</h3>
             <textarea id="post-text" class="input-modern" style="height:120px; resize:none;" placeholder="What's on your mind?"></textarea>
             <input type="text" id="link-input" class="input-modern" placeholder="Link (optional)">
@@ -103,6 +109,153 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <div id="settings-modal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <button onclick="ui.closeModal('settings-modal')" style="position:absolute; right:20px; top:20px; border:none; background:none; font-size:24px; cursor:pointer;">&times;</button>
+            <h3 style="margin-top:0;">Edit Profile</h3>
+            <label>Display Name</label>
+            <input type="text" id="edit-display-name" class="input-modern">
+            <label>Handle</label>
+            <input type="text" id="edit-handle" class="input-modern">
+            <label>PFP Seed (DiceBear)</label>
+            <input type="text" id="edit-pfp-seed" class="input-modern" placeholder="e.g. 'sunset' or 'pixel'">
+            <button class="btn-main" style="width:100%" onclick="profile.update()">Save Changes</button>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://jekgyjnftijxikhvvmeq.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_FCVlQet25kUFQzX4OTONcQ_dytr_YJo";
+        const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const ADMIN_EMAIL = "ecfriendsclub@gmail.com";
+        let sessionUser = null;
+        let profileData = null;
+
+        function toast(msg) {
+            const c = document.getElementById('toast-container');
+            const t = document.createElement('div');
+            t.className = 'toast'; t.innerText = msg;
+            c.appendChild(t);
+            setTimeout(() => { t.style.opacity='0'; setTimeout(()=>t.remove(),300); }, 3000);
+        }
+
+        const ui = {
+            openModal: (id) => document.getElementById(id).classList.remove('hidden'),
+            closeModal: (id) => document.getElementById(id).classList.add('hidden'),
+            showView: (view) => {
+                document.getElementById('feed-view').classList.toggle('hidden', view !== 'feed');
+                document.getElementById('profile-view').classList.toggle('hidden', view !== 'profile');
+                if(view === 'profile') profile.loadProfileContent();
+            }
+        };
+
+        const profile = {
+            load: async (user) => {
+                sessionUser = user;
+                const { data, error } = await client.from('profiles').select('*').eq('id', user.id).single();
+                if (error || !data) {
+                    const h = prompt("Pick a handle (e.g. @ellie):");
+                    if(h) {
+                        const formatted = h.startsWith('@') ? h : '@' + h;
+                        await client.from('profiles').upsert({ id: user.id, handle: formatted, is_admin: (user.email === ADMIN_EMAIL) });
+                        location.reload();
+                    }
+                } else {
+                    profileData = data;
+                    document.getElementById('edit-display-name').value = data.display_name || "";
+                    document.getElementById('edit-handle').value = data.handle;
+                    
+                    const avatar = data.avatar_url || `https://api.dicebear.com/7.x/identicon/svg?seed=${data.handle}`;
+                    document.getElementById('current-user-handle-display').innerText = data.handle;
+                    document.getElementById('view-handle').innerText = data.handle;
+                    document.getElementById('view-display-name').innerText = data.display_name || "New User";
+                    document.getElementById('view-pfp').src = avatar;
+                    
+                    const { data: allPosts } = await client.from('posts').select('*').order('created_at', { ascending: false });
+                    const feed = document.getElementById('feed-container');
+                    feed.innerHTML = '';
+                    allPosts?.forEach(p => posts.render(p, feed));
+                }
+            },
+            update: async () => {
+                let h = document.getElementById('edit-handle').value.trim().toLowerCase();
+                const n = document.getElementById('edit-display-name').value.trim();
+                const s = document.getElementById('edit-pfp-seed').value.trim();
+
+                if(!h.startsWith('@')) h = '@' + h;
+
+                if(h !== profileData.handle) {
+                    const { data: taken } = await client.from('profiles').select('id').eq('handle', h).maybeSingle();
+                    if(taken) return toast("Handle taken!");
+                }
+
+                const updates = { handle: h, display_name: n };
+                if(s) updates.avatar_url = `https://api.dicebear.com/7.x/identicon/svg?seed=${s}`;
+
+                const { error } = await client.from('profiles').update(updates).eq('id', sessionUser.id);
+                if(error) toast("Error updating."); else location.reload();
+            },
+            loadProfileContent: async () => {
+                const container = document.getElementById('profile-posts-container');
+                container.innerHTML = '<p style="text-align:center; color:#999;">Loading...</p>';
+                const { data } = await client.from('posts').select('*').eq('user_id', sessionUser.id).order('created_at', { ascending: false });
+                container.innerHTML = data.length ? '' : '<p style="text-align:center; color:#999;">No posts yet.</p>';
+                data.forEach(p => posts.render(p, container));
+            }
+        };
+
+        const posts = {
+            create: async () => {
+                const text = document.getElementById('post-text').value;
+                const link = document.getElementById('link-input').value;
+                if(!text) return toast("Empty post!");
+                const { error } = await client.from('posts').insert([{ user_id: sessionUser.id, content: text, link_url: link }]);
+                if (error) toast(error.message); else location.reload();
+            },
+            render: (post, container) => {
+                const isMod = profileData?.is_admin === true;
+                const isOwner = post.user_id === sessionUser.id;
+                const html = `
+                    <div class="post-card" id="post-${post.id}">
+                        ${(isMod || isOwner) ? `<button class="mod-delete" onclick="admin.deletePost('${post.id}')">DELETE</button>` : ''}
+                        <div style="font-size: 11px; font-weight: 800; color: #aaa; margin-bottom: 5px;">LinkSocial Feed</div>
+                        <p>${post.content}</p>
+                        ${post.link_url ? `<a href="${post.link_url}" target="_blank" class="post-link">${post.link_url}</a>` : ''}
+                    </div>`;
+                container.insertAdjacentHTML('beforeend', html);
+            }
+        };
+
+        const admin = {
+            deletePost: async (pId) => {
+                if(!confirm("Delete post?")) return;
+                await client.from('posts').delete().eq('id', pId);
+                document.getElementById(`post-${pId}`).remove();
+                toast("Removed.");
+            }
+        };
+
+        const auth = {
+            handleAuth: async (type) => {
+                const e = document.getElementById('email-input').value;
+                const p = document.getElementById('password-input').value;
+                const { error } = (type === 'signup') ? await client.auth.signUp({email:e, password:p}) : await client.auth.signInWithPassword({email:e, password:p});
+                if (error) toast(error.message);
+            },
+            logout: async () => { await client.auth.signOut(); location.reload(); }
+        };
+
+        client.auth.onAuthStateChange((e, s) => {
+            if (s) {
+                document.getElementById('login-ui').classList.add('hidden');
+                document.getElementById('main-ui').classList.remove('hidden');
+                profile.load(s.user);
+            } else {
+                document.getElementById('login-ui').classList.remove('hidden');
+                document.getElementById('main-ui').classList.add('hidden');
+            }
+        });
+    </script>
 </body>
 </html>
