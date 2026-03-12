@@ -10,6 +10,8 @@
 </head>
 <body>
 
+    <div id="toast-container"></div>
+
     <div id="app">
         <main id="login-ui" class="container">
             <h1 class="title">LinkSocial</h1>
@@ -35,6 +37,7 @@
             <div id="library-view" class="hidden">
                 <h3 class="section-title">Your Private Library</h3>
                 <div id="library-container"></div>
+                <hr style="border:0; border-top:1px solid #eee; margin: 20px 0;">
             </div>
 
             <div class="user-info-bar">
@@ -43,7 +46,7 @@
             
             <div class="create-post">
                 <input type="text" id="link-input" class="input-field" placeholder="Paste link (https://...)">
-                <textarea id="post-text" class="input-field" placeholder="What's on your mind? #hashtags @mentions"></textarea>
+                <textarea id="post-text" class="input-field" placeholder="What's happening?"></textarea>
                 <button class="btn-main" onclick="posts.create()">Post</button>
             </div>
 
@@ -63,7 +66,7 @@
             <input type="text" id="edit-handle" class="input-field" placeholder="@handle">
             <input type="text" id="edit-display-name" class="input-field" placeholder="Display Name">
             <button class="btn-main" id="save-profile-btn" onclick="profile.update()">Update Profile</button>
-            <hr>
+            <hr style="margin:20px 0; border:0; border-top:1px solid #eee;">
             <button class="btn-danger" onclick="auth.logout()">Logout</button>
         </div>
     </div>
@@ -71,7 +74,7 @@
     <div id="onboarding-modal" class="modal hidden">
         <div class="modal-content">
             <h2>Welcome!</h2>
-            <p>Pick your unique handle to start.</p>
+            <p style="font-size:13px; color:#666; margin-bottom:20px;">Claim your unique @handle to start.</p>
             <input type="text" id="set-handle" class="input-field" placeholder="@username">
             <button class="btn-main" onclick="profile.setup()">Start Socializing</button>
         </div>
