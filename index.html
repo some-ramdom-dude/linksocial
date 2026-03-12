@@ -4,75 +4,102 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LinkSocial</title>
-    <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ff4d4d;
+            --bg: #ffffff;
+            --surface: #f8f9fa;
+            --text: #1a1a1a;
+            --border: #e9ecef;
+            --radius: 20px;
+        }
+
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; transition: 0.2s; }
+        body { background: var(--bg); color: var(--text); margin: 0; padding-bottom: 50px; }
+        .hidden { display: none !important; }
+
+        /* Modern Auth Page */
+        .auth-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #fafafa; }
+        .auth-card { background: white; padding: 40px; border-radius: 32px; box-shadow: 0 10px 40px rgba(0,0,0,0.05); width: 100%; max-width: 400px; text-align: center; }
+        .logo-text { font-size: 2.2rem; font-weight: 800; letter-spacing: -1.5px; margin-bottom: 30px; }
+        .logo-text span { color: var(--primary); }
+
+        /* App Layout */
+        .glass-header { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); padding: 15px 20px; }
+        .nav-content { max-width: 600px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .nav-actions { display: flex; gap: 12px; }
+
+        /* Buttons & Inputs */
+        .btn-main { background: var(--text); color: white; border: none; padding: 12px 24px; border-radius: 50px; font-weight: 600; cursor: pointer; }
+        .icon-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 50%; width: 40px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .input-modern { width: 100%; padding: 15px; border-radius: 15px; border: 1px solid var(--border); background: var(--surface); margin-bottom: 12px; outline: none; }
+        .input-modern:focus { border-color: var(--primary); }
+
+        /* Feed & Post Cards */
+        .view-content { max-width: 600px; margin: 20px auto; padding: 0 20px; }
+        .post-card { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 25px; margin-bottom: 20px; position: relative; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
+        .post-card p { line-height: 1.5; margin: 10px 0; }
+        .post-link { color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+        
+        /* Mod Delete Button */
+        .mod-delete { position: absolute; top: 15px; right: 15px; color: #ff4d4d; font-weight: 800; cursor: pointer; background: none; border: none; font-size: 14px; }
+
+        /* Toast Notifications */
+        #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; }
+        .toast { background: var(--text); color: white; padding: 12px 25px; border-radius: 50px; font-size: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 10px; }
+    </style>
 </head>
 <body>
     <div id="toast-container"></div>
 
     <div id="app">
-        <main id="login-ui" class="container">
-            <h1 class="title">LinkSocial</h1>
-            <div class="auth-box">
-                <input type="email" id="email-input" class="input-field" placeholder="Email">
-                <input type="password" id="password-input" class="input-field" placeholder="Password">
-                <button class="btn-main" onclick="auth.handleAuth('login')">Login</button>
-                <div class="divider"><span>OR</span></div>
-                <button class="btn-google" onclick="auth.loginWithGoogle()">
-                    <img src="https://www.google.com/favicon.ico" width="14"> Continue with Google
-                </button>
-                <p class="switch-text">New here? <span onclick="auth.handleAuth('signup')">Sign Up</span></p>
+        <main id="login-ui" class="auth-page">
+            <div class="auth-card">
+                <h1 class="logo-text">Link<span>Social</span></h1>
+                <input type="email" id="email-input" class="input-modern" placeholder="Email">
+                <input type="password" id="password-input" class="input-modern" placeholder="Password">
+                <button class="btn-main" style="width:100%" onclick="auth.handleAuth('login')">Login</button>
+                <p style="font-size: 13px; color: #666; margin-top: 20px;">New? <span style="color: var(--primary); cursor: pointer;" onclick="auth.handleAuth('signup')">Sign Up</span></p>
             </div>
         </main>
 
-        <main id="main-ui" class="container hidden">
-            <div class="header-nav">
-                <input type="text" id="user-search" placeholder="Search..." onkeyup="ui.handleSearch(event)">
-                <button class="icon-btn" onclick="ui.openModal('post-modal')">Post</button>
-                <button class="icon-btn" onclick="ui.showView('profile')">Profile</button>
-                <button class="icon-btn" onclick="ui.openModal('settings-modal')">⚙️</button>
-            </div>
-
-            <div id="feed-view">
-                <h2 id="current-user-handle-display">@handle</h2>
-                <div id="feed-container"></div>
-            </div>
-
-            <div id="profile-view" class="hidden">
-                <button class="back-btn" onclick="ui.showView('feed')">← Back</button>
-                <div class="profile-card">
-                    <img id="view-pfp" src="" class="profile-pfp-lg">
-                    <h2 id="view-display-name">Display Name</h2>
-                    <p id="view-handle">@handle</p>
+        <main id="main-ui" class="hidden">
+            <header class="glass-header">
+                <div class="nav-content">
+                    <h2 style="margin:0; letter-spacing:-1px;">LS</h2>
+                    <div class="nav-actions">
+                        <button class="btn-main" onclick="ui.openModal('post-modal')">Post</button>
+                        <button class="icon-btn" onclick="ui.showView('profile')">👤</button>
+                    </div>
                 </div>
-                <div class="profile-tabs">
-                    <button class="tab-btn active" onclick="ui.loadProfileTab('saved', this)">Saved</button>
-                    <button class="tab-btn" onclick="ui.loadProfileTab('liked', this)">Liked</button>
+            </header>
+
+            <section id="feed-view" class="view-content">
+                <h1 id="current-user-handle-display" style="font-weight: 800; font-size: 2rem;">@handle</h1>
+                <div id="feed-container"></div>
+            </section>
+
+            <section id="profile-view" class="view-content hidden">
+                <button class="btn-main" onclick="ui.showView('feed')" style="background:var(--surface); color:var(--text); margin-bottom:20px;">← Back</button>
+                <div style="text-align:center; padding: 30px 0;">
+                    <img id="view-pfp" src="" style="width:100px; height:100px; border-radius:50%; background:#eee;">
+                    <h2 id="view-handle" style="margin-top:15px;">@handle</h2>
+                    <button class="btn-main" onclick="auth.logout()" style="background:#fff; border:1px solid #ff4d4d; color:#ff4d4d; margin-top:10px;">Logout</button>
                 </div>
                 <div id="profile-posts-container"></div>
-            </div>
-
-            <footer class="repo-footer">
-                <a href="https://github.com/some-ramdom-dude/linksocial" target="_blank">GitHub repository</a>
-            </footer>
+            </section>
         </main>
     </div>
 
-    <div id="post-modal" class="modal hidden">
-        <div class="modal-content">
-            <button class="close-btn" onclick="ui.closeModal('post-modal')">&times;</button>
-            <h3>New Post</h3>
-            <input type="text" id="link-input" class="input-field" placeholder="Link (https://...)">
-            <textarea id="post-text" class="input-field" placeholder="What's happening?"></textarea>
-            <button class="btn-main" onclick="posts.create()">Post</button>
-        </div>
-    </div>
-
-    <div id="onboarding-modal" class="modal hidden">
-        <div class="modal-content">
-            <h2>Welcome!</h2>
-            <input type="text" id="set-handle" class="input-field" placeholder="@username">
-            <button class="btn-main" onclick="profile.setup()">Claim Handle</button>
+    <div id="post-modal" class="hidden" style="position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.5);">
+        <div style="background:white; padding:30px; border-radius:30px; width:90%; max-width:450px; position:relative;">
+            <button onclick="ui.closeModal('post-modal')" style="position:absolute; right:20px; top:20px; border:none; background:none; font-size:20px; cursor:pointer;">&times;</button>
+            <h3 style="margin-top:0;">New Post</h3>
+            <textarea id="post-text" class="input-modern" style="height:120px; resize:none;" placeholder="What's on your mind?"></textarea>
+            <input type="text" id="link-input" class="input-modern" placeholder="Link (optional)">
+            <button class="btn-main" style="width:100%" onclick="posts.create()">Post to Feed</button>
         </div>
     </div>
 
