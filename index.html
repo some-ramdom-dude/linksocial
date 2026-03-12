@@ -4,12 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LinkSocial</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22white%22/><text y=%2250%%22 x=%2250%%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-family=%22sans-serif%22 font-weight=%22bold%22 font-size=%2260%22 fill=%22black%22>LS</text></svg>">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-
     <div id="toast-container"></div>
 
     <div id="app">
@@ -29,28 +27,30 @@
 
         <main id="main-ui" class="container hidden">
             <div class="header-nav">
-                <input type="text" id="user-search" placeholder="Search @handle..." onkeyup="ui.handleSearch(event)">
-                <button class="icon-btn" onclick="ui.toggleLibrary()">Library</button>
-                <button class="icon-btn" onclick="ui.openModal('profile-modal')">Settings</button>
+                <input type="text" id="user-search" placeholder="Search..." onkeyup="ui.handleSearch(event)">
+                <button class="icon-btn" onclick="ui.openModal('post-modal')">Post</button>
+                <button class="icon-btn" onclick="ui.showView('profile')">Profile</button>
+                <button class="icon-btn" onclick="ui.openModal('settings-modal')">⚙️</button>
             </div>
 
-            <div id="library-view" class="hidden">
-                <h3 class="section-title">Your Private Library</h3>
-                <div id="library-container"></div>
-                <hr style="border:0; border-top:1px solid #eee; margin: 20px 0;">
+            <div id="feed-view">
+                <h2 id="current-user-handle-display">@handle</h2>
+                <div id="feed-container"></div>
             </div>
 
-            <div class="user-info-bar">
-                <h2 id="current-user-handle">@handle</h2>
+            <div id="profile-view" class="hidden">
+                <button class="back-btn" onclick="ui.showView('feed')">← Back</button>
+                <div class="profile-card">
+                    <img id="view-pfp" src="" class="profile-pfp-lg">
+                    <h2 id="view-display-name">Display Name</h2>
+                    <p id="view-handle">@handle</p>
+                </div>
+                <div class="profile-tabs">
+                    <button class="tab-btn active" onclick="ui.loadProfileTab('saved', this)">Saved</button>
+                    <button class="tab-btn" onclick="ui.loadProfileTab('liked', this)">Liked</button>
+                </div>
+                <div id="profile-posts-container"></div>
             </div>
-            
-            <div class="create-post">
-                <input type="text" id="link-input" class="input-field" placeholder="Paste link (https://...)">
-                <textarea id="post-text" class="input-field" placeholder="What's happening?"></textarea>
-                <button class="btn-main" onclick="posts.create()">Post</button>
-            </div>
-
-            <div id="feed-container"></div>
 
             <footer class="repo-footer">
                 <a href="https://github.com/some-ramdom-dude/linksocial" target="_blank">GitHub repository</a>
@@ -58,25 +58,21 @@
         </main>
     </div>
 
-    <div id="profile-modal" class="modal hidden">
+    <div id="post-modal" class="modal hidden">
         <div class="modal-content">
-            <button class="close-btn" onclick="ui.closeModal('profile-modal')">&times;</button>
-            <h3>Settings</h3>
-            <p id="handle-cooldown" class="cooldown-notice"></p>
-            <input type="text" id="edit-handle" class="input-field" placeholder="@handle">
-            <input type="text" id="edit-display-name" class="input-field" placeholder="Display Name">
-            <button class="btn-main" id="save-profile-btn" onclick="profile.update()">Update Profile</button>
-            <hr style="margin:20px 0; border:0; border-top:1px solid #eee;">
-            <button class="btn-danger" onclick="auth.logout()">Logout</button>
+            <button class="close-btn" onclick="ui.closeModal('post-modal')">&times;</button>
+            <h3>New Post</h3>
+            <input type="text" id="link-input" class="input-field" placeholder="Link (https://...)">
+            <textarea id="post-text" class="input-field" placeholder="What's happening?"></textarea>
+            <button class="btn-main" onclick="posts.create()">Post</button>
         </div>
     </div>
 
     <div id="onboarding-modal" class="modal hidden">
         <div class="modal-content">
             <h2>Welcome!</h2>
-            <p style="font-size:13px; color:#666; margin-bottom:20px;">Claim your unique @handle to start.</p>
             <input type="text" id="set-handle" class="input-field" placeholder="@username">
-            <button class="btn-main" onclick="profile.setup()">Start Socializing</button>
+            <button class="btn-main" onclick="profile.setup()">Claim Handle</button>
         </div>
     </div>
 
